@@ -412,7 +412,9 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                           ],
                           onSelected: (value) {
                             if (value == 'show') {
-                              _showCheckbox = true;
+                              setState(() {
+                                _showCheckbox = true;
+                              });
                               return;
                             }
                             if (value == 'sort_by_id_asc') {
