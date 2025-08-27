@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:audio_service/audio_service.dart';
 import 'dart:async';
 import '../database/database.dart';
 import 'audio_player_service.dart';
@@ -53,6 +54,7 @@ class PlayerProvider with ChangeNotifier {
 
   PlayerProvider() {
     _initializeListeners();
+    _setupAudioServiceCallbacks();
     setPlayMode(PlayMode.loop);
   }
 
@@ -61,12 +63,26 @@ class PlayerProvider with ChangeNotifier {
     _playingSub = player.stream.playing.listen((playing) {
       _isPlaying = playing;
       _isLoading = false;
+      
+      // 更新 AudioService 状态
+      _audioService.updatePlaybackState(
+        playing: playing,
+        position: _position,
+      );
+      
       notifyListeners();
     });
 
     // 播放进度
     _positionSub = player.stream.position.listen((pos) {
       _position = pos;
+      
+      // 定期更新 AudioService 位置
+      _audioService.updatePlaybackState(
+        playing: _isPlaying,
+        position: pos,
+      );
+      
       notifyListeners();
     });
 
@@ -82,6 +98,17 @@ class PlayerProvider with ChangeNotifier {
         _handleSongCompleteWithDebounce();
       }
     });
+  }
+
+  void _setupAudioServiceCallbacks() {
+    _audioService.setCallbacks(
+      onPlay: () => togglePlay(),
+      onPause: () => togglePlay(), 
+      onStop: () => stop(),
+      onNext: () => next(),
+      onPrevious: () => previous(),
+      onSeek: (position) => seekTo(position),
+    );
   }
 
   void _handleSongCompleteWithDebounce() {
@@ -118,11 +145,23 @@ class PlayerProvider with ChangeNotifier {
       }
 
       _currentSong = song;
+      
+      // 更新 AudioService 媒体项
+      _audioService.updateCurrentMediaItem(song);
+      
       await _audioService.playSong(song);
+      
     } catch (e) {
       _isLoading = false;
       _isPlaying = false;
       _errorMessage = '播放失败: ${e.toString()}';
+      
+      // 更新 AudioService 错误状态
+      _audioService.updatePlaybackState(
+        playing: false,
+        processingState: AudioProcessingState.error,
+      );
+      
       notifyListeners();
     }
   }
@@ -132,7 +171,7 @@ class PlayerProvider with ChangeNotifier {
 
     try {
       if (_isPlaying) {
-        await _audioService.pause();
+        await _audioService.pausePlayer();
       } else {
         await _audioService.resume();
       }
@@ -145,11 +184,18 @@ class PlayerProvider with ChangeNotifier {
   Future<void> stop() async {
     try {
       _isHandlingComplete = true; // 防止stop时触发complete回调
-      await _audioService.stop();
+      await _audioService.stopPlayer();
       _currentSong = null;
       _isPlaying = false;
       _position = Duration.zero;
       _errorMessage = null;
+      
+      // 更新 AudioService 状态
+      _audioService.updatePlaybackState(
+        playing: false,
+        processingState: AudioProcessingState.idle,
+      );
+      
       notifyListeners();
     } catch (e) {
       _errorMessage = '停止失败: ${e.toString()}';
@@ -200,7 +246,7 @@ class PlayerProvider with ChangeNotifier {
 
   Future<void> seekTo(Duration position) async {
     try {
-      await player.seek(position);
+      await _audioService.seekPlayer(position);
     } catch (e) {
       _errorMessage = '跳转失败: ${e.toString()}';
       notifyListeners();

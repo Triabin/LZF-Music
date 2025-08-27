@@ -4,6 +4,7 @@ import 'library_view.dart';
 import 'playlists_view.dart';
 import 'favorites_view.dart';
 import 'recently_played_view.dart';
+import 'storage_setting_page.dart'; // 你的存储设置页面
 import '../widgets/mini_player.dart';
 import '../widgets/show_aware_page.dart';
 
@@ -18,10 +19,10 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   bool isExtended = true;
   int _hoverIndex = -1;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   final menuItems = const [
     {'icon': Icons.library_music_rounded, 'iconSize': 22.0, 'label': '库'},
-    // {'icon': Icons.playlist_play_rounded, 'iconSize': 22.0, 'label': '播放列表'},
     {'icon': Icons.favorite_rounded, 'iconSize': 22.0, 'label': '喜欢'},
     {'icon': Icons.history_rounded, 'iconSize': 22.0, 'label': '最近播放'},
     {'icon': Icons.settings_rounded, 'iconSize': 22.0, 'label': '系统设置'},
@@ -30,7 +31,6 @@ class _HomePageState extends State<HomePage> {
   // 每个页面对应一个 GlobalKey
   final pageKeys = [
     GlobalKey<LibraryViewState>(),
-    // GlobalKey<PlaylistsViewState>(),
     GlobalKey<FavoritesViewState>(),
     GlobalKey<RecentlyPlayedViewState>(),
     GlobalKey<SettingsPageState>(),
@@ -45,7 +45,11 @@ class _HomePageState extends State<HomePage> {
       LibraryView(key: pageKeys[0]),
       FavoritesView(key: pageKeys[1]),
       RecentlyPlayedView(key: pageKeys[2]),
-      SettingsPage(key: pageKeys[3]),
+      // 将 SettingsPage 包装，传递导航函数
+      SettingsPageWrapper(
+        key: pageKeys[3],
+        navigatorKey: _navigatorKey,
+      ),
     ];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -54,20 +58,24 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onTabChanged(int newIndex) {
-  if (newIndex == _selectedIndex) return; // 同一个页面点击不触发
+    if (newIndex == _selectedIndex) return;
 
-  setState(() {
-    _selectedIndex = newIndex;
-  });
+    setState(() {
+      _selectedIndex = newIndex;
+    });
 
-  // 等待一帧，确保页面切换后State存在
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final state = pageKeys[newIndex].currentState;
-    if (state is ShowAwarePage) {
-      state.onPageShow();
+    // 如果切换到非设置页面，需要重置设置页面的导航栈
+    if (newIndex != 3) {
+      _navigatorKey.currentState?.popUntil((route) => route.isFirst);
     }
-  });
-}
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = pageKeys[newIndex].currentState;
+      if (state is ShowAwarePage) {
+        state.onPageShow();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,25 +113,25 @@ class _HomePageState extends State<HomePage> {
                         duration: const Duration(milliseconds: 200),
                         transitionBuilder:
                             (Widget child, Animation<double> anim) {
-                              return FadeTransition(
-                                opacity: anim,
-                                child: SizeTransition(
-                                  axis: Axis.horizontal,
-                                  sizeFactor: anim,
-                                  child: child,
-                                ),
-                              );
-                            },
+                          return FadeTransition(
+                            opacity: anim,
+                            child: SizeTransition(
+                              axis: Axis.horizontal,
+                              sizeFactor: anim,
+                              child: child,
+                            ),
+                          );
+                        },
                         child: isExtended
                             ? const Text(
-                                ' Music',
-                                style: TextStyle(
-                                  height: 2,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              )
+                          ' Music',
+                          style: TextStyle(
+                            height: 2,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
                             : const SizedBox(key: ValueKey('empty')),
                       ),
                     ],
@@ -183,25 +191,25 @@ class _HomePageState extends State<HomePage> {
                                     duration: const Duration(milliseconds: 200),
                                     child: isExtended
                                         ? Padding(
-                                            key: const ValueKey('text'),
-                                            padding: const EdgeInsets.only(
-                                              left: 12,
-                                            ),
-                                            child: Text(
-                                              item['label'] as String,
-                                              style: TextStyle(
-                                                color: textColor,
-                                                fontWeight: isSelected
-                                                    ? FontWeight.bold
-                                                    : FontWeight.normal,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          )
+                                      key: const ValueKey('text'),
+                                      padding: const EdgeInsets.only(
+                                        left: 12,
+                                      ),
+                                      child: Text(
+                                        item['label'] as String,
+                                        style: TextStyle(
+                                          color: textColor,
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    )
                                         : const SizedBox(
-                                            width: 0,
-                                            key: ValueKey('empty'),
-                                          ),
+                                      width: 0,
+                                      key: ValueKey('empty'),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -254,3 +262,64 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+// 设置页面包装器，包含独立的Navigator
+class SettingsPageWrapper extends StatefulWidget {
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  const SettingsPageWrapper({
+    super.key,
+    required this.navigatorKey,
+  });
+
+  @override
+  State<SettingsPageWrapper> createState() => SettingsPageWrapperState();
+}
+
+class SettingsPageWrapperState extends State<SettingsPageWrapper> implements ShowAwarePage {
+  @override
+  void onPageShow() {
+    // 页面显示时的处理逻辑
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print(111);
+    return Navigator(
+      key: widget.navigatorKey,
+      onGenerateRoute: (RouteSettings settings) {
+
+        print(settings.name);
+        WidgetBuilder builder;
+        switch (settings.name) {
+          case '/settings':
+            builder = (BuildContext context) => const SettingsPage();
+            break;
+          case '/storage-settings':
+            builder = (BuildContext context) => const StorageSettingPage();
+            break;
+          default:
+            builder = (BuildContext context) => const SettingsPage();
+        }
+        return MaterialPageRoute(
+          builder: builder,
+          settings: settings,
+        );
+      },
+    );
+  }
+}
+
+// 在 SettingsPage 中使用导航的辅助函数
+class NavigationHelper {
+  static void navigateToStorageSettings(BuildContext context) {
+    Navigator.of(context).pushNamed('/storage-settings');
+  }
+
+  static void navigateBack(BuildContext context) {
+    Navigator.of(context).pop();
+  }
+}
+
+
+

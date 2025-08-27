@@ -4,7 +4,6 @@ import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:drift/drift.dart';
 import '../database/database.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:charset/charset.dart';
 import 'package:path/path.dart' as p; // 跨平台路径处理
 
 class MusicImportService {

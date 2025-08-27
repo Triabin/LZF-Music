@@ -1,5 +1,6 @@
 // theme_provider.dart - 主题管理
 import 'package:flutter/material.dart';
+import 'package:lzf_music/views/storage_setting_page.dart';
 import 'package:provider/provider.dart';
 import '../services/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -38,6 +39,9 @@ class SettingsPageState extends State<SettingsPage> {
               children: [
                 _buildSectionHeader('外观设置'),
                 _buildThemeSettingCard(),
+                const SizedBox(height: 18),
+                _buildSectionHeader('存储设置'),
+                _buildStorageSettingCard(),
                 const SizedBox(height: 18),
                 _buildSectionHeader('播放设置'),
                 _buildPlaybackSettingCard(),
@@ -91,6 +95,44 @@ class SettingsPageState extends State<SettingsPage> {
                 subtitle: Text(themeProvider.getThemeName()),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => _showThemeDialog(themeProvider),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStorageSettingCard() {
+    return Consumer<AppThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return _buildSettingCard(
+          child: Column(
+            children: [
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Theme.of(
+                    context,
+                  ).primaryColor.withOpacity(0.1),
+                  child: Icon(
+                    themeProvider.getThemeIcon(),
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                title: const Text(
+                  '存储设置',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+                subtitle: const Text('添加存储本地/WebDav/More...'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StorageSettingPage(), // 目标页面
+                    ),
+                  );
+                },
               ),
             ],
           ),
