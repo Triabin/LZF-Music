@@ -127,8 +127,9 @@ class MainApp extends StatelessWidget {
     final playerProvider = context.read<PlayerProvider>();
     return Consumer<AppThemeProvider>(
       builder: (context, themeProvider, child) {
-        return Focus(
+        return FocusScope(
           autofocus: true,
+          canRequestFocus: true,
           onKeyEvent: (node, event) {
             if (event is KeyDownEvent) {
               if (event.physicalKey == PhysicalKeyboardKey.space) {
