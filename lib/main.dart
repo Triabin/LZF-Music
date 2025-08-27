@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lzf_music/services/audio_player_service.dart';
@@ -95,9 +96,7 @@ Future<void> _initializeMobile() async {
 
   try {
     // 移动端状态栏设置
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge,
-    );
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     // 设置状态栏样式
     SystemChrome.setSystemUIOverlayStyle(
@@ -125,33 +124,77 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final playerProvider = context.read<PlayerProvider>();
     return Consumer<AppThemeProvider>(
       builder: (context, themeProvider, child) {
-        return MaterialApp(
-          title: 'LZF Music',
-          theme: _buildLightTheme(),
-          darkTheme: _buildDarkTheme(),
-          themeMode: themeProvider.themeMode,
-          home: const HomePage(),
-          builder: (context, child) {
-            // 桌面端需要自定义标题栏
-            if (_isDesktop()) {
-              return Stack(
-                children: [
-                  if (child != null) Positioned.fill(child: child),
-                  const Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 30,
-                    child: CustomTitleBar(),
-                  ),
-                ],
-              );
+        return Focus(
+          autofocus: true,
+          onKeyEvent: (node, event) {
+            if (event is KeyDownEvent) {
+              if (event.physicalKey == PhysicalKeyboardKey.space) {
+                playerProvider.togglePlay();
+                return KeyEventResult.handled;
+              }
             }
-            // 移动端直接返回内容
-            return child ?? const SizedBox.shrink();
+            if (event.physicalKey == PhysicalKeyboardKey.arrowLeft) {
+              playerProvider.seekTo(
+                Duration(
+                  seconds: max(playerProvider.position.inSeconds - 10, 0),
+                ),
+              );
+              return KeyEventResult.handled;
+            }
+            if (event.physicalKey == PhysicalKeyboardKey.arrowRight) {
+              playerProvider.seekTo(
+                Duration(
+                  seconds: min(
+                    playerProvider.position.inSeconds + 10,
+                    playerProvider.duration.inSeconds,
+                  ),
+                ),
+              );
+              return KeyEventResult.handled;
+            }
+            if (event.physicalKey == PhysicalKeyboardKey.arrowUp) {
+              playerProvider.previous();
+              return KeyEventResult.handled;
+            }
+            if (event.physicalKey == PhysicalKeyboardKey.arrowDown) {
+              playerProvider.next();
+              return KeyEventResult.handled;
+            }
+
+            return KeyEventResult.ignored;
           },
+          child: MaterialApp(
+            title: 'LZF Music',
+            theme: _buildLightTheme(),
+            darkTheme: _buildDarkTheme(),
+            themeMode: themeProvider.themeMode,
+            home: Focus(
+              canRequestFocus: false, // 阻止它们获取焦点
+              child: const HomePage(),
+            ),
+            builder: (context, child) {
+              // 桌面端需要自定义标题栏
+              if (_isDesktop()) {
+                return Stack(
+                  children: [
+                    if (child != null) Positioned.fill(child: child),
+                    const Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 30,
+                      child: CustomTitleBar(),
+                    ),
+                  ],
+                );
+              }
+              // 移动端直接返回内容
+              return child ?? const SizedBox.shrink();
+            },
+          ),
         );
       },
     );

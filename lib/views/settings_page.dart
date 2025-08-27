@@ -33,22 +33,24 @@ class SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 18),
           Expanded(
-            // ✅ 给 ListView 高度约束
-            child: ListView(
-              padding: const EdgeInsets.all(8.0),
-              children: [
-                _buildSectionHeader('外观设置'),
-                _buildThemeSettingCard(),
-                const SizedBox(height: 18),
-                _buildSectionHeader('存储设置'),
-                _buildStorageSettingCard(),
-                const SizedBox(height: 18),
-                _buildSectionHeader('播放设置'),
-                _buildPlaybackSettingCard(),
-                const SizedBox(height: 18),
-                _buildSectionHeader('其他设置'),
-                _buildOtherSettingsCard(),
-              ],
+            child: FocusScope(
+              canRequestFocus: false, // 整个范围内的子控件都不能抢焦点
+              child: ListView(
+                padding: const EdgeInsets.all(8.0),
+                children: [
+                  _buildSectionHeader('外观设置'),
+                  _buildThemeSettingCard(),
+                  const SizedBox(height: 18),
+                  _buildSectionHeader('存储设置'),
+                  _buildStorageSettingCard(),
+                  const SizedBox(height: 18),
+                  _buildSectionHeader('播放设置'),
+                  _buildPlaybackSettingCard(),
+                  const SizedBox(height: 18),
+                  _buildSectionHeader('其他设置'),
+                  _buildOtherSettingsCard(),
+                ],
+              ),
             ),
           ),
         ],
@@ -125,7 +127,7 @@ class SettingsPageState extends State<SettingsPage> {
                 ),
                 subtitle: const Text('添加存储本地/WebDav/More...'),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: (){
+                onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -280,7 +282,9 @@ class SettingsPageState extends State<SettingsPage> {
               SizedBox(height: 12),
               Text('软件优点：', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 6),
-              Text('1. 简洁、好看，拥有类似 Apple Music 的歌词页面，支持多种格式（mp3, m4a, wav, flac, aac）无损格式。'),
+              Text(
+                '1. 简洁、好看，拥有类似 Apple Music 的歌词页面，支持多种格式（mp3, m4a, wav, flac, aac）无损格式。',
+              ),
               SizedBox(height: 6),
               Text('2. 能从音乐文件中读取 LRC 歌词。未来将支持歌词编辑、MV 导入与播放、WebDav 协议等功能，'),
               SizedBox(height: 6),

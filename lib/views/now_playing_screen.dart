@@ -287,7 +287,9 @@ class _ImprovedNowPlayingScreenState extends State<ImprovedNowPlayingScreen> {
             : currentSong?.lyrics?.split('\n') ?? ["暂无歌词"];
 
         // 你的原有UI代码保持完全不变
-        return Scaffold(
+        return FocusScope(
+  canRequestFocus: false,
+  child: Scaffold(
           backgroundColor: Colors.transparent,
           body: Stack(
             fit: StackFit.expand,
@@ -702,7 +704,7 @@ class _ImprovedNowPlayingScreenState extends State<ImprovedNowPlayingScreen> {
               ),
             ],
           ),
-        );
+        ));
       },
     );
   }

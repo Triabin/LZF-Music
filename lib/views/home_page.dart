@@ -284,7 +284,6 @@ class SettingsPageWrapperState extends State<SettingsPageWrapper> implements Sho
 
   @override
   Widget build(BuildContext context) {
-    print(111);
     return Navigator(
       key: widget.navigatorKey,
       onGenerateRoute: (RouteSettings settings) {

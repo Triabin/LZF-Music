@@ -173,19 +173,29 @@ jobs:
           name: Release ${{ github.ref_name }}
           body: |
             🎉 发布版本 ${{ github.ref_name }}
-            
-            ### 🖥️ Windows 版本
-            - **安装程序**: 支持 Windows 10/11 (x64)
-            - **功能**: 自动创建桌面快捷方式
-            
-            ### 🍎 macOS 版本  
-            - **Intel (x86_64)**: 适用于 Intel Mac
-            - **Apple Silicon (arm64)**: 适用于 M1/M2 Mac
-            - **通用版 (universal)**: 同时支持 Intel 和 Apple Silicon
-            
-            ### ✨ 更新内容
-            - 支持按照添加时间排序
-            - 支持批量选择删除
+              🖥️ Windows 版本
+                •	安装程序: 支持 Windows 10/11 (x64)
+                •	功能: 自动创建桌面快捷方式
+                •	智能音频控制: 支持系统音频服务，拔掉耳机自动暂停播放，耳机按钮控制播放/暂停/切歌
+
+              🍎 macOS 版本
+                •	Intel (x86_64): 适用于 Intel Mac
+                •	Apple Silicon (arm64): 适用于 M1/M2 Mac
+                •	通用版 (universal): 同时支持 Intel 和 Apple Silicon
+                •	智能音频控制: 支持系统音频服务，拔掉耳机自动暂停，耳机按钮控制播放/暂停/切歌
+
+              ⌨️ 快捷键支持
+                •	空格: 播放 / 暂停
+                •	左右方向键: 快进 / 快退
+                •	上下方向键: 切换上一首 / 下一首
+
+              ✨ 更新内容
+                •	支持按照添加时间排序
+                •	支持批量选择删除
+                •	优化音频播放稳定性与耳机控制体验
+
+              ![耳机控制](https://github.com/GerryDush/LZF-Music/blob/main/doc/images/0.0.12/1.png?raw=true)
+              ![耳机控制](https://github.com/GerryDush/LZF-Music/blob/main/doc/images/0.0.12/2.png?raw=true)
           files: |
             macos-x86_64-dmg/*.dmg
             macos-arm64-dmg/*.dmg

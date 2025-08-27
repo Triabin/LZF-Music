@@ -70,38 +70,41 @@ class _AnimatedTrackHeightSliderState extends State<AnimatedTrackHeightSlider> {
     final inactiveColor =
         widget.inactiveColor ?? (isDarkMode ? Colors.white30 : Colors.black26);
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => isHovered = true),
-      onExit: (_) => setState(() => isHovered = false),
-      child: TweenAnimationBuilder<double>(
-        tween: Tween<double>(
-          begin: widget.trackHeight,
-          end: isHovered ? widget.trackHeight + 6 : widget.trackHeight,
-        ),
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        builder: (context, trackHeight, child) {
-          return SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: trackHeight,
-              thumbShape: HiddenThumbComponentShape(),
-              overlayShape: const NoPaddingOverlayShape(overlayRadius: 10.0),
-              activeTrackColor: activeColor,
-              inactiveTrackColor: inactiveColor,
-            ),
-            child: child!,
-          );
-        },
-        child: Slider(
-          value: widget.value.clamp(widget.min, widget.max),
-          max: widget.max,
-          min: widget.min,
-          activeColor: activeColor,
-          inactiveColor: inactiveColor,
-          onChanged: widget.onChanged,
-          onChangeEnd: widget.onChangeEnd,
-        ),
+    return Focus(
+  canRequestFocus: false, // 禁止抢焦点
+  child: MouseRegion(
+    onEnter: (_) => setState(() => isHovered = true),
+    onExit: (_) => setState(() => isHovered = false),
+    child: TweenAnimationBuilder<double>(
+      tween: Tween<double>(
+        begin: widget.trackHeight,
+        end: isHovered ? widget.trackHeight + 6 : widget.trackHeight,
       ),
-    );
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      builder: (context, trackHeight, child) {
+        return SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: trackHeight,
+            thumbShape: HiddenThumbComponentShape(),
+            overlayShape: const NoPaddingOverlayShape(overlayRadius: 10.0),
+            activeTrackColor: activeColor,
+            inactiveTrackColor: inactiveColor,
+          ),
+          child: child!,
+        );
+      },
+      child: Slider(
+        value: widget.value.clamp(widget.min, widget.max),
+        max: widget.max,
+        min: widget.min,
+        activeColor: activeColor,
+        inactiveColor: inactiveColor,
+        onChanged: widget.onChanged,
+        onChangeEnd: widget.onChangeEnd,
+      ),
+    ),
+  ),
+);
   }
 }
