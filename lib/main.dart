@@ -136,35 +136,34 @@ class MainApp extends StatelessWidget {
                 playerProvider.togglePlay();
                 return KeyEventResult.handled;
               }
-            }
-            if (event.physicalKey == PhysicalKeyboardKey.arrowLeft) {
-              playerProvider.seekTo(
-                Duration(
-                  seconds: max(playerProvider.position.inSeconds - 10, 0),
-                ),
-              );
-              return KeyEventResult.handled;
-            }
-            if (event.physicalKey == PhysicalKeyboardKey.arrowRight) {
-              playerProvider.seekTo(
-                Duration(
-                  seconds: min(
-                    playerProvider.position.inSeconds + 10,
-                    playerProvider.duration.inSeconds,
+              if (event.physicalKey == PhysicalKeyboardKey.arrowLeft) {
+                playerProvider.seekTo(
+                  Duration(
+                    seconds: max(playerProvider.position.inSeconds - 10, 0),
                   ),
-                ),
-              );
-              return KeyEventResult.handled;
+                );
+                return KeyEventResult.handled;
+              }
+              if (event.physicalKey == PhysicalKeyboardKey.arrowRight) {
+                playerProvider.seekTo(
+                  Duration(
+                    seconds: min(
+                      playerProvider.position.inSeconds + 10,
+                      playerProvider.duration.inSeconds,
+                    ),
+                  ),
+                );
+                return KeyEventResult.handled;
+              }
+              if (event.physicalKey == PhysicalKeyboardKey.arrowUp) {
+                playerProvider.previous();
+                return KeyEventResult.handled;
+              }
+              if (event.physicalKey == PhysicalKeyboardKey.arrowDown) {
+                playerProvider.next();
+                return KeyEventResult.handled;
+              }
             }
-            if (event.physicalKey == PhysicalKeyboardKey.arrowUp) {
-              playerProvider.previous();
-              return KeyEventResult.handled;
-            }
-            if (event.physicalKey == PhysicalKeyboardKey.arrowDown) {
-              playerProvider.next();
-              return KeyEventResult.handled;
-            }
-
             return KeyEventResult.ignored;
           },
           child: MaterialApp(
@@ -172,10 +171,7 @@ class MainApp extends StatelessWidget {
             theme: _buildLightTheme(),
             darkTheme: _buildDarkTheme(),
             themeMode: themeProvider.themeMode,
-            home: Focus(
-              canRequestFocus: false, // 阻止它们获取焦点
-              child: const HomePage(),
-            ),
+            home: const HomePage(),
             builder: (context, child) {
               // 桌面端需要自定义标题栏
               if (_isDesktop()) {
