@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/slider_custom.dart';
 import '../services/player_provider.dart';
+import '../contants/app_contants.dart' show PlayMode;
 
 // 歌词行数据模型
 class LyricLine {

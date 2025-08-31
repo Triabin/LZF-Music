@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../views/now_playing_screen.dart';
 import '../services/player_provider.dart';
 import './slider_custom.dart';
+import '../contants/app_contants.dart' show PlayMode;
 
 class MiniPlayer extends StatefulWidget {
   const MiniPlayer({super.key});
@@ -245,6 +246,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
                     children: [
                       // 上一首按钮
                       IconButton(
+                        color: activeColor,
                         icon: Icon(Icons.skip_previous_rounded, size: 40),
                         onPressed:
                             (playerProvider.playMode == PlayMode.sequence &&
@@ -267,6 +269,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
                         alignment: Alignment.center,
                         children: [
                           IconButton(
+                            color: activeColor,
                             icon: Icon(
                               playerProvider.isPlaying
                                   ? Icons.pause_rounded
@@ -300,6 +303,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
                       ),
                       // 下一首按钮
                       IconButton(
+                        color: activeColor,
                         icon: Icon(Icons.skip_next_rounded, size: 40),
                         onPressed:
                             (playerProvider.playMode == PlayMode.sequence &&

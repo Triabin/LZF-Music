@@ -30,16 +30,34 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
   bool _showCheckbox = false;
   List<int> checkedIds = [];
 
+  // 添加变量跟踪上一次的播放歌曲ID
+  int? _lastCurrentSongId;
+  // 添加标记来区分是否是用户在当前页面点击的
+  bool _isUserClickedFromThisPage = false;
+  bool _enableScrollAnimation = false;
+
   @override
   void onPageShow() {
-    _loadSongs();
+    _loadSongs().then((_) {
+      // 页面首次显示且歌曲加载完成后，检查是否需要滚动到当前播放歌曲
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final playerProvider = Provider.of<PlayerProvider>(
+          context,
+          listen: false,
+        );
+        final currentSongId = playerProvider.currentSong?.id;
+        if (currentSongId != null && mounted && _scrollController.hasClients) {
+          _lastCurrentSongId = currentSongId;
+          _scrollToCurrentSong(currentSongId);
+        }
+      });
+    });
   }
 
   @override
   void initState() {
     super.initState();
     database = Provider.of<MusicDatabase>(context, listen: false);
-
     importService = MusicImportService(database);
 
     _scrollController.addListener(() {
@@ -52,10 +70,7 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
         });
       }
 
-      // 重置之前的定时器
       _scrollTimer?.cancel();
-
-      // 设置新的定时器
       _scrollTimer = Timer(const Duration(milliseconds: 150), () {
         if (mounted) {
           setState(() {
@@ -66,7 +81,62 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
     });
   }
 
-  // 在你的 StatefulWidget 中更新这个方法
+  // 添加滚动到指定歌曲的方法
+  void _scrollToCurrentSong(int songId) {
+    // 找到歌曲在列表中的索引
+    final index = songs.indexWhere((song) => song.id == songId);
+    if (index == -1) return; // 歌曲不在当前列表中
+
+    // 计算滚动位置
+    const itemHeight = 70.0; // itemExtent 的值
+    const cardMargin = 0; // 卡片的垂直边距 (4 * 2)
+    final targetPosition = index * (itemHeight + cardMargin);
+
+    // 获取可视区域高度
+    final viewportHeight = _scrollController.position.viewportDimension;
+    final maxScrollExtent = _scrollController.position.maxScrollExtent;
+
+    // 计算理想的滚动位置（让目标歌曲出现在视口中央）
+    final idealPosition =
+        targetPosition - (viewportHeight / 2) + (itemHeight / 2);
+
+    // 确保滚动位置在有效范围内
+    final scrollPosition = idealPosition.clamp(0.0, maxScrollExtent);
+
+    if (!_enableScrollAnimation) {
+      _scrollController.jumpTo(scrollPosition);
+      _enableScrollAnimation = true;
+    }
+    _scrollController.animateTo(
+      scrollPosition,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  // 检查当前播放歌曲是否发生变化
+  void _checkCurrentSongChange(PlayerProvider playerProvider) {
+    final currentSongId = playerProvider.currentSong?.id;
+
+    // 如果当前播放歌曲发生了变化
+    if (currentSongId != _lastCurrentSongId && currentSongId != null) {
+      _lastCurrentSongId = currentSongId;
+
+      // 只有当不是用户在当前页面点击时才自动滚动
+      if (!_isUserClickedFromThisPage) {
+        // 延迟一点时间再滚动，确保UI已经更新
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _scrollController.hasClients) {
+            _scrollToCurrentSong(currentSongId);
+          }
+        });
+      }
+
+      // 重置标记
+      _isUserClickedFromThisPage = false;
+    }
+  }
+
   Future<void> _loadSongs() async {
     try {
       print(
@@ -87,7 +157,6 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
       print('加载了 ${loadedSongs.length} 首歌曲');
     } catch (e) {
       print('加载歌曲失败: $e');
-      // 可以显示错误信息给用户
       setState(() {
         songs = [];
       });
@@ -114,8 +183,12 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
     return Consumer<PlayerProvider>(
       builder: (context, playerProvider, child) {
         playerProvider.setDatabase(database);
+
+        // 在每次构建时检查当前播放歌曲是否发生变化
+        _checkCurrentSongChange(playerProvider);
+
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0), // 左上右16，底部0
+          padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -147,7 +220,7 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                   ),
                   child: Row(
                     children: [
-                      const SizedBox(width: 60), // 封面图宽度 + 间距
+                      const SizedBox(width: 60),
                       Expanded(
                         child: Row(
                           children: [
@@ -327,12 +400,12 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                   actions: [
                                     TextButton(
                                       onPressed: () =>
-                                          Navigator.pop(context, false), // 点击取消
+                                          Navigator.pop(context, false),
                                       child: const Text('取消'),
                                     ),
                                     TextButton(
                                       onPressed: () =>
-                                          Navigator.pop(context, true), // 点击确定
+                                          Navigator.pop(context, true),
                                       child: const Text(
                                         '确定',
                                         style: TextStyle(color: Colors.red),
@@ -365,7 +438,6 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                 });
                               }
                             } else if (value == 'hide') {
-                              // 隐藏选择框逻辑
                               setState(() {
                                 checkedIds.clear();
                                 _showCheckbox = false;
@@ -381,12 +453,10 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                           onChanged: (v) {
                             setState(() {
                               if (v == true) {
-                                // 全选
                                 checkedIds
                                   ..clear()
                                   ..addAll(songs.map((s) => s.id));
                               } else {
-                                // 清空
                                 checkedIds.clear();
                               }
                             });
@@ -409,6 +479,11 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                               ),
                             ),
                             PopupMenuItem(value: 'show', child: Text('显示选择框')),
+                            // 添加"定位到当前播放"选项
+                            PopupMenuItem(
+                              value: 'scroll_to_current',
+                              child: Text('定位到当前播放'),
+                            ),
                           ],
                           onSelected: (value) {
                             if (value == 'show') {
@@ -426,6 +501,22 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                 orderDirection = 'asc';
                               }
                               _loadSongs();
+                              return;
+                            }
+                            // 添加手动定位到当前播放歌曲的功能
+                            if (value == 'scroll_to_current') {
+                              final playerProvider =
+                                  Provider.of<PlayerProvider>(
+                                    context,
+                                    listen: false,
+                                  );
+                              final currentSongId =
+                                  playerProvider.currentSong?.id;
+                              if (currentSongId != null) {
+                                _scrollToCurrentSong(currentSongId);
+                              } else {
+                                CompactCenterSnackBar.show(context, '当前没有播放歌曲');
+                              }
                               return;
                             }
                           },
@@ -459,7 +550,6 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                           : Colors.transparent,
                       child: Row(
                         children: [
-                          // 主要内容区域 - 被MouseRegion包裹
                           Expanded(
                             child: MouseRegion(
                               cursor: SystemMouseCursors.click,
@@ -469,6 +559,8 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                   setState(() => _hoveredIndex = null),
                               child: GestureDetector(
                                 onDoubleTap: () {
+                                  // 标记这是用户在当前页面的点击操作
+                                  _isUserClickedFromThisPage = true;
                                   playerProvider.playSong(
                                     songs[index],
                                     playlist: songs,
@@ -476,23 +568,19 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                   );
                                 },
                                 child: SizedBox(
-                                  // 使用Container来扩展可点击区域，覆盖整个左侧
                                   width: double.infinity,
                                   height: double.infinity,
                                   child: Stack(
                                     children: [
-                                      // 透明的全覆盖层，确保整个区域都可以点击
                                       Positioned.fill(
                                         child: Container(
                                           color: Colors.transparent,
                                         ),
                                       ),
-                                      // 实际内容
                                       Padding(
                                         padding: EdgeInsets.all(8),
                                         child: Row(
                                           children: [
-                                            // 封面图
                                             Container(
                                               width: 50,
                                               height: 50,
@@ -525,11 +613,9 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                                     ),
                                             ),
                                             const SizedBox(width: 10),
-                                            // 歌曲信息
                                             Expanded(
                                               child: Row(
                                                 children: [
-                                                  // 歌曲名称
                                                   Expanded(
                                                     flex: 3,
                                                     child: Text(
@@ -550,7 +636,6 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                                           TextOverflow.ellipsis,
                                                     ),
                                                   ),
-                                                  // 艺术家
                                                   Expanded(
                                                     flex: 2,
                                                     child: Text(
@@ -569,7 +654,6 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                                           TextOverflow.ellipsis,
                                                     ),
                                                   ),
-                                                  // 专辑名
                                                   Expanded(
                                                     flex: 2,
                                                     child: Text(
@@ -588,7 +672,6 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                                           TextOverflow.ellipsis,
                                                     ),
                                                   ),
-                                                  // 采样率
                                                   SizedBox(
                                                     width: 70,
                                                     child: Text(
@@ -609,7 +692,6 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                                           TextOverflow.ellipsis,
                                                     ),
                                                   ),
-                                                  // 比特率
                                                   SizedBox(
                                                     width: 80,
                                                     child: Text(
@@ -630,7 +712,6 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                                           TextOverflow.ellipsis,
                                                     ),
                                                   ),
-                                                  // 时长
                                                   SizedBox(
                                                     width: 60,
                                                     child: Text(
@@ -709,27 +790,12 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
                                   icon: const Icon(Icons.more_vert_rounded),
                                   iconSize: 20,
                                   itemBuilder: (context) => const [
-                                    // PopupMenuItem(
-                                    //   value: 'import_lrc',
-                                    //   child: Text('导入歌词'),
-                                    // ),
                                     PopupMenuItem(
                                       value: 'delete',
                                       child: Text('删除'),
                                     ),
                                   ],
-                                  onSelected: (value) async{
-                                    // if (value == 'import_lrc') {
-                                    //   try {
-                                    //     await importService.importLRC(songs[index]);
-                                    //   } catch (e) {
-                                    //     CompactCenterSnackBar.show(context,"导入失败：$e");  
-                                    //     return;
-                                    //   }
-                                    //   CompactCenterSnackBar.show(context,"导入成功");
-                                    //   _loadSongs();
-                                    //   return;
-                                    // }
+                                  onSelected: (value) async {
                                     if (value == 'delete') {
                                       database.deleteSong(songs[index].id);
                                       CompactCenterSnackBar.show(
@@ -754,6 +820,7 @@ class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
   }
 }
 
+// LibraryHeader 类保持不变
 class LibraryHeader extends StatefulWidget {
   final Future<void> Function(String? keyword) onSearch;
   final Future<void> Function() onImportDirectory;
@@ -778,7 +845,6 @@ class _LibraryHeaderState extends State<LibraryHeader> {
 
   void _onSubmitted(String? value) {
     widget.onSearch(value);
-    // 收起搜索框
     setState(() {
       // _showSearch = false;
     });
@@ -809,13 +875,12 @@ class _LibraryHeaderState extends State<LibraryHeader> {
                   horizontal: 12,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16), // 圆角半径16，可调
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
               onSubmitted: _onSubmitted,
             ),
           ),
-
         IconButton(
           icon: Icon(_showSearch ? Icons.close_rounded : Icons.search_rounded),
           onPressed: () {

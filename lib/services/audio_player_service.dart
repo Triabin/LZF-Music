@@ -58,14 +58,18 @@ class AudioPlayerService extends BaseAudioHandler {
   // 更新媒体项 - 由 PlayerProvider 调用
   void updateCurrentMediaItem(Song song) {
     _currentSong = song;
-    mediaItem.add(MediaItem(
-      id: song.id.toString(),
-      album: song.album ?? 'Unknown Album',
-      title: song.title,
-      artist: song.artist ?? 'Unknown Artist',
-      duration: song.duration != null ? Duration(milliseconds: song.duration!*1000) : null,
-      artUri: song.albumArtPath != null ? Uri.file(song.albumArtPath!) : null,
-    ));
+    mediaItem.add(
+      MediaItem(
+        id: song.id.toString(),
+        album: song.album ?? 'Unknown Album',
+        title: song.title,
+        artist: song.artist ?? 'Unknown Artist',
+        duration: song.duration != null
+            ? Duration(milliseconds: song.duration! * 1000)
+            : null,
+        artUri: song.albumArtPath != null ? Uri.file(song.albumArtPath!) : null,
+      ),
+    );
   }
 
   // 更新播放状态 - 由 PlayerProvider 调用
@@ -74,26 +78,28 @@ class AudioPlayerService extends BaseAudioHandler {
     Duration? position,
     AudioProcessingState? processingState,
   }) {
-    playbackState.add(playbackState.value.copyWith(
-      controls: [
-        MediaControl.skipToPrevious,
-        playing ? MediaControl.pause : MediaControl.play,
-        MediaControl.skipToNext,
-      ],
-      systemActions: const {
-        MediaAction.seek,
-        MediaAction.seekForward,
-        MediaAction.seekBackward,
-      },
-      androidCompactActionIndices: const [0, 1, 2],
-      processingState: processingState ?? AudioProcessingState.ready,
-      playing: playing,
-      updatePosition: position ?? Duration.zero,
-    ));
+    playbackState.add(
+      playbackState.value.copyWith(
+        controls: [
+          MediaControl.skipToPrevious,
+          playing ? MediaControl.pause : MediaControl.play,
+          MediaControl.skipToNext,
+        ],
+        systemActions: const {
+          MediaAction.seek,
+          MediaAction.seekForward,
+          MediaAction.seekBackward,
+        },
+        androidCompactActionIndices: const [0, 1, 2],
+        processingState: processingState ?? AudioProcessingState.ready,
+        playing: playing,
+        updatePosition: position ?? Duration.zero,
+      ),
+    );
   }
 
   // 原有的播放方法，使用 media_kit 播放
-  Future<void> playSong(Song song) async {
+  Future<void> playSong(Song song, {bool playNow = true}) async {
     try {
       print('Playing song: ${song.filePath}');
 
@@ -109,11 +115,9 @@ class AudioPlayerService extends BaseAudioHandler {
       );
 
       _currentSong = song;
-      
-      // 使用 media_kit 播放
-      await player.open(Media(song.filePath));
-      await player.play();
 
+      // 使用 media_kit 播放
+      await player.open(Media(song.filePath), play: playNow);
     } catch (e) {
       print('Error playing song: $e');
       updatePlaybackState(
@@ -159,7 +163,8 @@ class AudioPlayerService extends BaseAudioHandler {
   Future<void> pausePlayer() async => await player.pause();
   Future<void> resume() async => await player.play();
   Future<void> stopPlayer() async => await player.stop();
-  Future<void> seekPlayer(Duration position) async => await player.seek(position);
+  Future<void> seekPlayer(Duration position) async =>
+      await player.seek(position);
 
   // 保留原有的流
   Stream<Duration> get positionStream => player.stream.position;

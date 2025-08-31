@@ -248,7 +248,7 @@ class _MainAppState extends State<MainApp> with WindowListener, TrayListener {
 
   // 方案2: 使用系统托盘
   Future<void> _initTray() async {
-    await trayManager.setIcon('assets/images/test.png');
+    await trayManager.setIcon(Platform.isWindows? 'assets/windows/icons/tray_icon.ico':'assets/icons/tray_icon.png');
   }
 
   Future<void> _updateTray() async {
