@@ -24,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   final menuItems = const [
     {'icon': Icons.library_music_rounded, 'iconSize': 22.0, 'label': '库'},
     {'icon': Icons.favorite_rounded, 'iconSize': 22.0, 'label': '喜欢'},
+    {'icon': Icons.playlist_play_rounded, 'iconSize': 22.0, 'label': '播放列表'},
     {'icon': Icons.history_rounded, 'iconSize': 22.0, 'label': '最近播放'},
     {'icon': Icons.settings_rounded, 'iconSize': 22.0, 'label': '系统设置'},
   ];
@@ -32,6 +33,7 @@ class _HomePageState extends State<HomePage> {
   final pageKeys = [
     GlobalKey<LibraryViewState>(),
     GlobalKey<FavoritesViewState>(),
+    GlobalKey<PlaylistsViewState>(),
     GlobalKey<RecentlyPlayedViewState>(),
     GlobalKey<SettingsPageState>(),
   ];
@@ -44,10 +46,10 @@ class _HomePageState extends State<HomePage> {
     _pages = [
       LibraryView(key: pageKeys[0]),
       FavoritesView(key: pageKeys[1]),
-      RecentlyPlayedView(key: pageKeys[2]),
-      // 将 SettingsPage 包装，传递导航函数
+      PlaylistsView(key: pageKeys[2]),
+      RecentlyPlayedView(key: pageKeys[3]),
       SettingsPageWrapper(
-        key: pageKeys[3],
+        key: pageKeys[4],
         navigatorKey: _navigatorKey,
       ),
     ];

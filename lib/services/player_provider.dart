@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:audio_service/audio_service.dart';
 import 'dart:async';
+import 'dart:math' as math;
 import '../database/database.dart';
 import 'audio_player_service.dart';
 
@@ -21,7 +22,11 @@ class PlayerProvider with ChangeNotifier {
   PlayMode _playMode = PlayMode.sequence;
 
   List<Song> _playlist = [];
+  List<Song> _originalPlaylist = []; // 保存原始顺序的播放列表
+  List<Song> _shuffledPlaylist = []; // 打乱的播放列表
   int _currentIndex = -1;
+
+  final math.Random _random = math.Random();
 
   // 流订阅
   StreamSubscription? _playingSub;
@@ -127,7 +132,33 @@ class PlayerProvider with ChangeNotifier {
     _audioService.setDatabase(database);
   }
 
-  Future<void> playSong(Song song, {List<Song>? playlist, int? index}) async {
+  // 创建打乱的播放列表
+  void _createShuffledPlaylist() {
+    if (_originalPlaylist.isEmpty) return;
+    
+    _shuffledPlaylist = List.from(_originalPlaylist);
+    
+    // 如果当前有正在播放的歌曲，确保它在打乱列表的第一位
+    if (_currentSong != null) {
+      _shuffledPlaylist.removeWhere((song) => song.id == _currentSong!.id);
+      _shuffledPlaylist.insert(0, _currentSong!);
+    }
+    
+    // 打乱除第一首歌以外的其他歌曲
+    if (_shuffledPlaylist.length > 1) {
+      final songsToShuffle = _shuffledPlaylist.sublist(1);
+      songsToShuffle.shuffle(_random);
+      _shuffledPlaylist = [_shuffledPlaylist.first, ...songsToShuffle];
+    }
+  }
+
+  // 获取当前歌曲在原始列表中的索引
+  int _getCurrentSongIndexInOriginal() {
+    if (_currentSong == null) return -1;
+    return _originalPlaylist.indexWhere((song) => song.id == _currentSong!.id);
+  }
+
+  Future<void> playSong(Song song, {List<Song>? playlist, int? index, bool shuffle = true}) async {
     try {
       _isLoading = true;
       _errorMessage = null;
@@ -135,13 +166,42 @@ class PlayerProvider with ChangeNotifier {
       notifyListeners();
 
       if (playlist != null) {
-        _playlist = List.from(playlist);
-        _currentIndex = index ?? 0;
-      } else if (_playlist.isEmpty || !_playlist.contains(song)) {
+        _originalPlaylist = List.from(playlist);
+        
+        if (_playMode == PlayMode.shuffle && shuffle) {
+          // 只有在shuffle标志为true时才重新打乱
+          _currentSong = song;
+          _createShuffledPlaylist();
+          _playlist = _shuffledPlaylist;
+          _currentIndex = _shuffledPlaylist.indexWhere((s) => s.id == song.id);
+        } else if (_playMode == PlayMode.shuffle && !shuffle) {
+          // 随机模式但不重新打乱，使用现有的打乱列表
+          _playlist = _shuffledPlaylist.isNotEmpty ? _shuffledPlaylist : _originalPlaylist;
+          _currentIndex = _playlist.indexWhere((s) => s.id == song.id);
+          if (_currentIndex == -1) {
+            // 如果在打乱列表中找不到，回退到原始列表
+            _playlist = _originalPlaylist;
+            _currentIndex = index ?? 0;
+          }
+        } else {
+          // 非随机模式
+          _playlist = List.from(playlist);
+          _currentIndex = index ?? 0;
+        }
+      } else if (_originalPlaylist.isEmpty || !_originalPlaylist.any((s) => s.id == song.id)) {
+        _originalPlaylist = [song];
+        _shuffledPlaylist = [song];
         _playlist = [song];
         _currentIndex = 0;
       } else {
-        _currentIndex = _playlist.indexOf(song);
+        // 在现有播放列表中播放，不重新打乱
+        if (_playMode == PlayMode.shuffle) {
+          _currentIndex = _shuffledPlaylist.indexWhere((s) => s.id == song.id);
+          _playlist = _shuffledPlaylist;
+        } else {
+          _currentIndex = _originalPlaylist.indexWhere((s) => s.id == song.id);
+          _playlist = _originalPlaylist;
+        }
       }
 
       _currentSong = song;
@@ -209,16 +269,21 @@ class PlayerProvider with ChangeNotifier {
 
   Future<void> previous() async {
     if (_playlist.isEmpty) return;
+    
     if (_playMode == PlayMode.shuffle) {
-      final randomIndex =
-          DateTime.now().millisecondsSinceEpoch % _playlist.length;
-      _currentIndex = randomIndex;
+      // 在随机模式下，从打乱的列表中选择上一首
+      if (_currentIndex > 0) {
+        _currentIndex--;
+      } else {
+        _currentIndex = _playlist.length - 1;
+      }
       await playSong(_playlist[_currentIndex]);
       return;
     }
-    if (!hasPrevious && _playMode != PlayMode.loop&& _playMode != PlayMode.singleLoop) return;
-    if ((_playMode == PlayMode.loop||_playMode == PlayMode.singleLoop) && !hasPrevious) {
-      _currentIndex = _playlist.length-1;
+    
+    if (!hasPrevious && _playMode != PlayMode.loop && _playMode != PlayMode.singleLoop) return;
+    if ((_playMode == PlayMode.loop || _playMode == PlayMode.singleLoop) && !hasPrevious) {
+      _currentIndex = _playlist.length - 1;
     } else {
       _currentIndex--;
     }
@@ -227,16 +292,20 @@ class PlayerProvider with ChangeNotifier {
 
   Future<void> next() async {
     if (_playlist.isEmpty) return;
+    
     if (_playMode == PlayMode.shuffle) {
-      final randomIndex =
-          DateTime.now().millisecondsSinceEpoch % _playlist.length;
-      _currentIndex = randomIndex;
+      // 在随机模式下，从打乱的列表中选择下一首
+      if (_currentIndex < _playlist.length - 1) {
+        _currentIndex++;
+      } else {
+        _currentIndex = 0;
+      }
       await playSong(_playlist[_currentIndex]);
       return;
     }
 
-    if (!hasNext && _playMode != PlayMode.loop&& _playMode != PlayMode.singleLoop) return;
-    if ((_playMode == PlayMode.loop||_playMode == PlayMode.singleLoop) && !hasNext) {
+    if (!hasNext && _playMode != PlayMode.loop && _playMode != PlayMode.singleLoop) return;
+    if ((_playMode == PlayMode.loop || _playMode == PlayMode.singleLoop) && !hasNext) {
       _currentIndex = 0;
     } else {
       _currentIndex++;
@@ -273,29 +342,118 @@ class PlayerProvider with ChangeNotifier {
   }
 
   void setPlayMode(PlayMode mode) {
-    if (_playMode != mode) {
-      _playMode = mode;
-      notifyListeners();
+    if (_playMode == mode) return;
+    
+    final previousMode = _playMode;
+    _playMode = mode;
+    
+    // 处理播放模式切换
+    _handlePlayModeChange(previousMode, mode);
+    
+    notifyListeners();
+  }
+
+  List<Song> currentPlaylists(){
+    return _playlist;
+  }
+
+  void _handlePlayModeChange(PlayMode previousMode, PlayMode newMode) {
+    // 如果从随机模式切换到非随机模式
+    if (previousMode == PlayMode.shuffle && newMode != PlayMode.shuffle) {
+      _restoreOriginalPlaylist();
+    }
+    // 如果从非随机模式切换到随机模式
+    else if (previousMode != PlayMode.shuffle && newMode == PlayMode.shuffle) {
+      _switchToShuffleMode();
+    }
+  }
+
+  void _restoreOriginalPlaylist() {
+    if (_originalPlaylist.isEmpty) return;
+    
+    // 恢复到原始播放列表
+    _playlist = List.from(_originalPlaylist);
+    
+    // 更新当前索引为原始列表中的位置
+    if (_currentSong != null) {
+      _currentIndex = _getCurrentSongIndexInOriginal();
+      if (_currentIndex == -1) _currentIndex = 0;
+    }
+  }
+
+  void _switchToShuffleMode() {
+    if (_originalPlaylist.isEmpty) return;
+    
+    // 创建打乱的播放列表
+    _createShuffledPlaylist();
+    _playlist = _shuffledPlaylist;
+    
+    // 更新当前索引为打乱列表中的位置
+    if (_currentSong != null) {
+      _currentIndex = _shuffledPlaylist.indexWhere((s) => s.id == _currentSong!.id);
+      if (_currentIndex == -1) _currentIndex = 0;
     }
   }
 
   void setPlaylist(List<Song> songs, {int currentIndex = 0}) {
-    _playlist = List.from(songs);
+    _originalPlaylist = List.from(songs);
     _currentIndex = currentIndex.clamp(0, songs.length - 1);
+    
+    if (_playMode == PlayMode.shuffle) {
+      // 如果当前是随机模式，创建打乱的列表
+      if (songs.isNotEmpty) {
+        _currentSong = songs[_currentIndex];
+        _createShuffledPlaylist();
+        _playlist = _shuffledPlaylist;
+        _currentIndex = _shuffledPlaylist.indexWhere((s) => s.id == _currentSong!.id);
+      }
+    } else {
+      // 非随机模式使用原始列表
+      _playlist = List.from(songs);
+    }
+    
     if (songs.isNotEmpty) {
-      _currentSong = songs[_currentIndex];
+      _currentSong = songs[currentIndex.clamp(0, songs.length - 1)];
     }
     notifyListeners();
   }
 
   void addToPlaylist(Song song) {
-    _playlist.add(song);
+    _originalPlaylist.add(song);
+    
+    if (_playMode == PlayMode.shuffle) {
+      // 随机模式下添加到打乱列表的随机位置
+      if (_shuffledPlaylist.isEmpty) {
+        _shuffledPlaylist.add(song);
+      } else {
+        final randomIndex = _random.nextInt(_shuffledPlaylist.length + 1);
+        _shuffledPlaylist.insert(randomIndex, song);
+      }
+      _playlist = _shuffledPlaylist;
+    } else {
+      _playlist.add(song);
+    }
+    
     notifyListeners();
   }
 
   void removeFromPlaylist(int index) {
     if (index < 0 || index >= _playlist.length) return;
+    
+    final removedSong = _playlist[index];
+    
+    // 从当前播放列表中移除
     _playlist.removeAt(index);
+    
+    // 从原始列表中移除
+    _originalPlaylist.removeWhere((song) => song.id == removedSong.id);
+    
+    // 如果是随机模式，也从打乱列表中移除
+    if (_playMode == PlayMode.shuffle) {
+      _shuffledPlaylist.removeWhere((song) => song.id == removedSong.id);
+    }
+    
+    // 更新当前索引
     if (index < _currentIndex) {
       _currentIndex--;
     } else if (index == _currentIndex) {
@@ -308,6 +466,22 @@ class PlayerProvider with ChangeNotifier {
         _currentSong = _playlist[_currentIndex];
       }
     }
+    notifyListeners();
+  }
+
+  // 重新洗牌当前播放列表（保持当前歌曲在第一位）
+  void reshufflePlaylist() {
+    if (_playMode != PlayMode.shuffle || _originalPlaylist.isEmpty) return;
+    
+    _createShuffledPlaylist();
+    _playlist = _shuffledPlaylist;
+    
+    // 更新当前索引
+    if (_currentSong != null) {
+      _currentIndex = _shuffledPlaylist.indexWhere((s) => s.id == _currentSong!.id);
+      if (_currentIndex == -1) _currentIndex = 0;
+    }
+    
     notifyListeners();
   }
 
@@ -347,12 +521,8 @@ class PlayerProvider with ChangeNotifier {
           Future.microtask(() => next());
           break;
         case PlayMode.shuffle:
-          if (_playlist.isNotEmpty) {
-            final random =
-                DateTime.now().millisecondsSinceEpoch % _playlist.length;
-            _currentIndex = random;
-            Future.microtask(() => playSong(_playlist[_currentIndex]));
-          }
+          // 随机模式下播放下一首（已经在打乱的列表中）
+          Future.microtask(() => next());
           break;
       }
       notifyListeners();

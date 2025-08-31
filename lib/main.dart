@@ -13,6 +13,8 @@ import 'views/home_page.dart';
 import 'services/player_provider.dart';
 import 'database/database.dart';
 import './services/theme_provider.dart';
+import 'package:tray_manager/tray_manager.dart';
+import 'package:flutter/scheduler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -82,6 +84,7 @@ Future<void> _initializeDesktop() async {
 
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.setBackgroundColor(Colors.transparent);
+      await windowManager.setPreventClose(true);
       await windowManager.show();
       await windowManager.focus();
     });
@@ -119,53 +122,80 @@ bool _isMobile() {
   return Platform.isAndroid || Platform.isIOS;
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
 
   @override
+  _MainAppState createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> with WindowListener, TrayListener {
+  @override
+  void initState() {
+    super.initState();
+    if (_isDesktop()) {
+      windowManager.addListener(this);
+      trayManager.addListener(this);
+      _initTray();
+    }
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    trayManager.removeListener(this);
+    super.dispose();
+  }
+
+  // 拦截关闭事件
+  @override
+  void onWindowClose() async {
+    if (await windowManager.isPreventClose()) {
+      await windowManager.hide();
+    } else {
+      await windowManager.close();
+      exit(0);
+    }
+  }
+
+  @override
+  void onTrayIconMouseDown() async {
+    // do something, for example pop up the menu
+    // trayManager.popUpContextMenu();
+    if (!await windowManager.isVisible()) {
+      await windowManager.show();
+    }
+  }
+
+  @override
+  void onTrayIconRightMouseDown() async {
+    await _updateTray();
+    await trayManager.popUpContextMenu();
+  }
+
+  @override
+  void onTrayIconRightMouseUp() {
+    // do something
+  }
+
+  @override
+  void onTrayMenuItemClick(MenuItem menuItem) async {
+    if (menuItem.key == 'show_window') {
+      await windowManager.show();
+    } else if (menuItem.key == 'hide_window') {
+      await windowManager.hide();
+    } else if (menuItem.key == 'exit_app') {
+      await trayManager.destroy();
+      await windowManager.setPreventClose(false);
+      await windowManager.close();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final playerProvider = context.read<PlayerProvider>();
     return Consumer<AppThemeProvider>(
       builder: (context, themeProvider, child) {
-        return FocusScope(
-          autofocus: true,
-          canRequestFocus: true,
-          onKeyEvent: (node, event) {
-            if (event is KeyDownEvent) {
-              if (event.physicalKey == PhysicalKeyboardKey.space) {
-                playerProvider.togglePlay();
-                return KeyEventResult.handled;
-              }
-              if (event.physicalKey == PhysicalKeyboardKey.arrowLeft) {
-                playerProvider.seekTo(
-                  Duration(
-                    seconds: max(playerProvider.position.inSeconds - 10, 0),
-                  ),
-                );
-                return KeyEventResult.handled;
-              }
-              if (event.physicalKey == PhysicalKeyboardKey.arrowRight) {
-                playerProvider.seekTo(
-                  Duration(
-                    seconds: min(
-                      playerProvider.position.inSeconds + 10,
-                      playerProvider.duration.inSeconds,
-                    ),
-                  ),
-                );
-                return KeyEventResult.handled;
-              }
-              if (event.physicalKey == PhysicalKeyboardKey.arrowUp) {
-                playerProvider.previous();
-                return KeyEventResult.handled;
-              }
-              if (event.physicalKey == PhysicalKeyboardKey.arrowDown) {
-                playerProvider.next();
-                return KeyEventResult.handled;
-              }
-            }
-            return KeyEventResult.ignored;
-          },
+        return MyKeyboardHandler(
           child: MaterialApp(
             title: 'LZF Music',
             theme: _buildLightTheme(),
@@ -174,7 +204,7 @@ class MainApp extends StatelessWidget {
             home: const HomePage(),
             builder: (context, child) {
               // 桌面端需要自定义标题栏
-              if (_isDesktop()) {
+              if (Platform.isWindows) {
                 return Stack(
                   children: [
                     if (child != null) Positioned.fill(child: child),
@@ -188,7 +218,6 @@ class MainApp extends StatelessWidget {
                   ],
                 );
               }
-              // 移动端直接返回内容
               return child ?? const SizedBox.shrink();
             },
           ),
@@ -215,6 +244,26 @@ class MainApp extends StatelessWidget {
         toolbarHeight: _isDesktop() ? 56 : null,
       ),
     );
+  }
+
+  // 方案2: 使用系统托盘
+  Future<void> _initTray() async {
+    await trayManager.setIcon('assets/images/test.png');
+  }
+
+  Future<void> _updateTray() async {
+    bool isWindowVisible = await windowManager.isVisible();
+    Menu menu = Menu(
+      items: [
+        MenuItem(
+          key: isWindowVisible ? 'hide_window' : 'show_window',
+          label: isWindowVisible ? '隐藏窗口' : '显示窗口',
+        ),
+        MenuItem.separator(),
+        MenuItem(key: 'exit_app', label: '退出应用'),
+      ],
+    );
+    await trayManager.setContextMenu(menu);
   }
 
   // 构建深色主题
@@ -316,6 +365,106 @@ class CustomTitleBar extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class LoggingShortcutManager extends ShortcutManager {
+  @override
+  KeyEventResult handleKeypress(BuildContext context, KeyEvent event) {
+    final KeyEventResult result = super.handleKeypress(context, event);
+    if (result == KeyEventResult.handled) {
+      print('Handled shortcut $event in $context');
+    }
+    return result;
+  }
+}
+
+class MyKeyboardHandler extends StatefulWidget {
+  final Widget child;
+
+  const MyKeyboardHandler({Key? key, required this.child}) : super(key: key);
+
+  @override
+  _MyKeyboardHandlerState createState() => _MyKeyboardHandlerState();
+}
+
+class _MyKeyboardHandlerState extends State<MyKeyboardHandler> {
+  final Set<LogicalKeyboardKey> _pressedKeys = <LogicalKeyboardKey>{};
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    final playerProvider = context.read<PlayerProvider>();
+
+    if (event is KeyDownEvent) {
+      _pressedKeys.add(event.logicalKey);
+    } else if (event is KeyUpEvent) {
+      _pressedKeys.remove(event.logicalKey);
+    }
+
+    if (event is KeyDownEvent) {
+      // --- 逻辑一：处理 Command + W 组合键 ---
+      final isCommandPressed =
+          _pressedKeys.contains(LogicalKeyboardKey.metaLeft) ||
+          _pressedKeys.contains(LogicalKeyboardKey.metaRight);
+      final isControlPressed =
+          _pressedKeys.contains(LogicalKeyboardKey.controlLeft) ||
+          _pressedKeys.contains(LogicalKeyboardKey.controlRight);
+      final isPrimaryModifierPressed =
+          (Platform.isMacOS && isCommandPressed) ||
+          ((Platform.isWindows || Platform.isLinux) && isControlPressed);
+
+      // 使用 logicalKey 是因为它与键盘布局无关，"W"键永远是"W"
+      if (event.logicalKey == LogicalKeyboardKey.keyW && isCommandPressed) {
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          windowManager.hide();
+        });
+        return KeyEventResult.handled;
+      }
+
+      if (event.physicalKey == PhysicalKeyboardKey.space) {
+        playerProvider.togglePlay();
+        return KeyEventResult.handled;
+      }
+      if (isPrimaryModifierPressed) {
+        // --- 逻辑二：处理媒体控制单按键 ---
+        switch (event.physicalKey) {
+          case PhysicalKeyboardKey.arrowLeft:
+            playerProvider.seekTo(
+              Duration(seconds: max(playerProvider.position.inSeconds - 10, 0)),
+            );
+            return KeyEventResult.handled;
+
+          case PhysicalKeyboardKey.arrowRight:
+            playerProvider.seekTo(
+              Duration(
+                seconds: min(
+                  playerProvider.position.inSeconds + 10,
+                  playerProvider.duration.inSeconds,
+                ),
+              ),
+            );
+            return KeyEventResult.handled;
+
+          case PhysicalKeyboardKey.arrowUp:
+            playerProvider.previous();
+            return KeyEventResult.handled;
+
+          case PhysicalKeyboardKey.arrowDown:
+            playerProvider.next();
+            return KeyEventResult.handled;
+        }
+      }
+    }
+
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      autofocus: true,
+      onKeyEvent: _handleKeyEvent,
+      child: widget.child,
     );
   }
 }
