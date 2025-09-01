@@ -5,7 +5,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import '../database/database.dart';
 import 'audio_player_service.dart';
-import '../services/player_state_storage.dart';
+import '../storage/player_state_storage.dart';
 import '../contants/app_contants.dart' show PlayMode;
 
 class PlayerProvider with ChangeNotifier {

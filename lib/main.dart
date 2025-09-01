@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:lzf_music/services/audio_player_service.dart';
 import 'package:provider/provider.dart';
 import 'package:media_kit/media_kit.dart';
-// 桌面端窗口管理包 - 使用条件导入
 import 'package:window_manager/window_manager.dart' if (dart.library.html) '';
 import 'package:bitsdojo_window/bitsdojo_window.dart' if (dart.library.html) '';
 

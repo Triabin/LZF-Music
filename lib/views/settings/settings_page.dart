@@ -1,11 +1,11 @@
 // theme_provider.dart - 主题管理
 import 'package:flutter/material.dart';
-import 'package:lzf_music/views/storage_setting_page.dart';
+import 'package:lzf_music/views/settings/storage_setting_page.dart';
 import 'package:provider/provider.dart';
-import '../services/theme_provider.dart';
+import '../../services/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
-import '../widgets/compact_center_snack_bar.dart';
+import '../../widgets/compact_center_snack_bar.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);

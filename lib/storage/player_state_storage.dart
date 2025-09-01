@@ -27,7 +27,7 @@ class PlayerStateStorage {
   bool _isPlaying = false;
   Duration _position = Duration.zero;
   Song? _currentSong;
-  PlayMode _playMode = PlayMode.sequence;
+  PlayMode _playMode = PlayMode.shuffle;
   double _volume = 1.0;
   PlayerPage _currentPage = PlayerPage.library;
   Map<String, SortState> _pageSortStates = {};
