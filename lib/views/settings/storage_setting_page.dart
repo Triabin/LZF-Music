@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
-
-class StorageSettingPage extends StatelessWidget {
+import '../../widgets/show_aware_page.dart';
+class StorageSettingPage extends StatefulWidget {
   const StorageSettingPage({super.key});
+
+  @override
+  StorageSettingPageState createState() => StorageSettingPageState();
+}
+
+class StorageSettingPageState extends State<StorageSettingPage> with ShowAwarePage {
+  @override
+  void onPageShow() {
+    print('StorageSettingPage is shown');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,9 +20,7 @@ class StorageSettingPage extends StatelessWidget {
         title: const Text('存储设置'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            // NavigationHelper.navigateBack(context);
-          },
+          onPressed: () {},
         ),
       ),
       body: const Center(

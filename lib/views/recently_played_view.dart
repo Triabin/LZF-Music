@@ -17,7 +17,7 @@ class RecentlyPlayedView extends StatefulWidget {
 }
 
 class RecentlyPlayedViewState extends State<RecentlyPlayedView>
-    implements ShowAwarePage {
+    with ShowAwarePage {
   int? _hoveredIndex;
   bool _isScrolling = false;
   Timer? _scrollTimer;

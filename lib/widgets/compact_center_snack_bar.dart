@@ -15,8 +15,6 @@ class CompactCenterSnackBar extends StatefulWidget {
 
   static void show(BuildContext context, String message) {
     final overlay = Overlay.of(context);
-    if (overlay == null) return;
-
     late OverlayEntry overlayEntry;
 
     overlayEntry = OverlayEntry(
@@ -66,7 +64,6 @@ class _CompactCenterSnackBarState extends State<CompactCenterSnackBar>
     try {
       await _animationController.reverse();
     } catch (e) {
-      // 如果动画控制器已经被销毁，直接调用回调
       print(e);
     }
 

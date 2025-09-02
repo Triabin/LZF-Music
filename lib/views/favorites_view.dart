@@ -16,7 +16,7 @@ class FavoritesView extends StatefulWidget {
   State<FavoritesView> createState() => FavoritesViewState();
 }
 
-class FavoritesViewState extends State<FavoritesView> implements ShowAwarePage {
+class FavoritesViewState extends State<FavoritesView> with ShowAwarePage {
   int? _hoveredIndex;
   bool _isScrolling = false;
   Timer? _scrollTimer;

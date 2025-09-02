@@ -118,9 +118,7 @@ class MenuManager {
     currentPage.value = playerState.currentPage;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final state =
-          items[currentPage.value.index].pageKey.currentState as ShowAwarePage?;
-      state?.onPageShow();
+      _notifyPageShow(items[currentPage.value.index].pageKey);
     });
   }
 
@@ -144,7 +142,18 @@ class MenuManager {
 
     // 调用 ShowAwarePage 的 onPageShow
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      (items[page.index].pageKey.currentState as ShowAwarePage?)?.onPageShow();
+      _notifyPageShow(items[page.index].pageKey);
     });
+  }
+
+  void _notifyPageShow(GlobalKey key) {
+    final state = key.currentState;
+    if (state == null) return; // 非空判断
+    if (state is ShowAwarePage) {
+      state.onPageShow();
+    } else if (state is NestedNavigatorWrapperState) {
+      state
+          .onPageShow(); // NestedNavigatorWrapperState 已经 implements ShowAwarePage
+    }
   }
 }

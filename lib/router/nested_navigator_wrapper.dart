@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../widgets/show_aware_page.dart';
 /// 通用的 Navigator 包装器
 class NestedNavigatorWrapper extends StatefulWidget {
   final GlobalKey<NavigatorState> navigatorKey;
@@ -17,8 +17,23 @@ class NestedNavigatorWrapper extends StatefulWidget {
   State<NestedNavigatorWrapper> createState() => NestedNavigatorWrapperState();
 }
 
-class NestedNavigatorWrapperState extends State<NestedNavigatorWrapper> {
+class NestedNavigatorWrapperState extends State<NestedNavigatorWrapper> with ShowAwarePage {
   GlobalKey<NavigatorState> get navigatorKey => widget.navigatorKey;
+
+    @override
+  void onPageShow() {
+  final navigator = widget.navigatorKey.currentState;
+  if (navigator == null) return;
+
+  final currentRoute = navigator.overlay?.context;
+  if (currentRoute != null) {
+    final state = currentRoute.findAncestorStateOfType<ShowAwarePage>();
+    if (state != null && state != this) {
+      state.onPageShow();
+    }
+  }
+}
+  
   @override
   Widget build(BuildContext context) {
     return Navigator(

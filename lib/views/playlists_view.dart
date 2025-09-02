@@ -15,7 +15,7 @@ class PlaylistsView extends StatefulWidget {
   State<PlaylistsView> createState() => PlaylistsViewState();
 }
 
-class PlaylistsViewState extends State<PlaylistsView> implements ShowAwarePage {
+class PlaylistsViewState extends State<PlaylistsView> with ShowAwarePage {
   int? _hoveredIndex;
   bool _isScrolling = false;
   Timer? _scrollTimer;

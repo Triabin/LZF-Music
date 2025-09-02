@@ -16,7 +16,7 @@ class LibraryView extends StatefulWidget {
   State<LibraryView> createState() => LibraryViewState();
 }
 
-class LibraryViewState extends State<LibraryView> implements ShowAwarePage {
+class LibraryViewState extends State<LibraryView> with ShowAwarePage {
   int? _hoveredIndex;
   bool _isScrolling = false;
   Timer? _scrollTimer;
