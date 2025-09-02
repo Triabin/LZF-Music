@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:drift/drift.dart';
@@ -110,11 +111,19 @@ class MusicImportService {
       if (metadata.pictures.isNotEmpty) {
         final dbFolder = await getApplicationSupportDirectory();
         final picture = metadata.pictures.first;
+
+        // 计算图片内容的MD5哈希
+        final md5Hash = md5.convert(picture.bytes).toString();
+        final fileName = '$md5Hash.jpg';
+
         final albumArtFile = File(
-          p.join(dbFolder.path, '.album_art', '${p.basename(file.path)}.jpg'),
+          p.join(dbFolder.path, '.album_art', fileName),
         );
         await albumArtFile.parent.create(recursive: true);
-        await albumArtFile.writeAsBytes(picture.bytes);
+        // 如果文件已存在则不重复写入
+        if (!await albumArtFile.exists()) {
+          await albumArtFile.writeAsBytes(picture.bytes);
+        }
         albumArtPath = albumArtFile.path;
       }
 
