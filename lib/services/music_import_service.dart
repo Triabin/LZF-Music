@@ -12,18 +12,21 @@ class MusicImportService {
 
   MusicImportService(this.database);
 
-  Future<void> importFromDirectory() async {
+  Future<String> importFromDirectory({
+    void Function(int processed, int total)? onProgress,
+  }) async {
     final result = await FilePicker.platform.getDirectoryPath(
       lockParentWindow: true,
     );
     if (result != null) {
-      await processDirectoryWithProgress(Directory(result), 
-        onProgress: (processed, total) {
-        print('Processed $processed of $total files');
+      return await processDirectoryWithProgress(Directory(result), 
+        onProgress: onProgress ?? (processed, total) {
+          print('Processed $processed of $total files');
         },
         fileCount: await countMusicFiles(Directory(result))
       );
     }
+    return '';
   }
 
   Future<String> importFiles(
@@ -106,32 +109,7 @@ class MusicImportService {
     return count;
   }
 
-  Future<void> _processDirectory(
-    Directory directory, {
-    int maxDepth = 3,
-    int currentDepth = 0,
-  }) async {
-    if (currentDepth > maxDepth) return;
-    await for (final entity in directory.list(followLinks: false)) {
-      if (entity is File) {
-        final extension = p
-            .extension(entity.path)
-            .toLowerCase()
-            .replaceFirst('.', '');
-        if (['mp3', 'm4a', 'wav', 'flac', 'aac'].contains(extension)) {
-          await _processMusicFile(entity);
-        }
-      } else if (entity is Directory) {
-        await _processDirectory(
-          entity,
-          maxDepth: maxDepth,
-          currentDepth: currentDepth + 1,
-        );
-      }
-    }
-  }
-
-  Future<void> processDirectoryWithProgress(
+  Future<String> processDirectoryWithProgress(
     Directory directory, {
     required int fileCount,
     required void Function(int processed, int total) onProgress,
@@ -142,7 +120,7 @@ class MusicImportService {
     int currentDepth = 0,
   }) async {
     failedFiles ??= [];
-    if (currentDepth > maxDepth) return;
+    if (currentDepth > maxDepth) return '';
     await for (final entity in directory.list(followLinks: false)) {
       if (entity is File) {
         final extension = p
@@ -163,15 +141,17 @@ class MusicImportService {
           print('Unsupported file format: ${entity.path}');
         }
       } else if (entity is Directory) {
-        await processDirectoryWithProgress(
+        String failedSubdirectories = await processDirectoryWithProgress(
           entity,
           maxDepth: maxDepth,
           currentDepth: currentDepth + 1,
           fileCount: fileCount,
           onProgress: onProgress,
         );
+        failedFiles.add(failedSubdirectories);
       }
     }
+    return failedFiles.join(',');
   }
 
   Future<void> _processMusicFile(File file) async {

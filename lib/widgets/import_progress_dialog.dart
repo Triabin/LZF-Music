@@ -148,16 +148,21 @@ class _ImportProgressDialogState extends State<ImportProgressDialog> {
               const SizedBox(height: 4),
               Container(
                 width: double.infinity,
+                height: 120, // 固定高度
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.grey[100],
                   borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.grey[300]!),
                 ),
-                child: Text(
-                  widget.failedFileName!,
-                  style: const TextStyle(fontSize: 12),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    child: Text(
+                      widget.failedFileName!,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
                 ),
               ),
             ],
