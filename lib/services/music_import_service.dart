@@ -61,6 +61,33 @@ class MusicImportService {
     }
   }
 
+  Future<int> countMusicFiles(
+    Directory directory, {
+    int maxDepth = 3,
+    int currentDepth = 0,
+  }) async {
+    if (currentDepth > maxDepth) return 0;
+
+    int count = 0;
+
+    await for (final entity in directory.list(followLinks: false)) {
+      if (entity is File) {
+        final extension = p.extension(entity.path).toLowerCase().replaceFirst('.', '');
+        if (['mp3', 'm4a', 'wav', 'flac', 'aac'].contains(extension)) {
+          count++;
+        }
+      } else if (entity is Directory) {
+        count += await countMusicFiles(
+          entity,
+          maxDepth: maxDepth,
+          currentDepth: currentDepth + 1,
+        );
+      }
+    }
+
+    return count;
+  }
+
   Future<void> _processDirectory(
     Directory directory, {
     int maxDepth = 3,
@@ -81,6 +108,48 @@ class MusicImportService {
           entity,
           maxDepth: maxDepth,
           currentDepth: currentDepth + 1,
+        );
+      }
+    }
+  }
+
+  Future<void> processDirectoryWithProgress(
+    Directory directory, {
+    required int fileCount,
+    required void Function(int processed, int total) onProgress,
+    int successCount = 0,
+    int failCount = 0,
+    List<String>? failedFiles,
+    int maxDepth = 3,
+    int currentDepth = 0,
+  }) async {
+    failedFiles ??= [];
+    if (currentDepth > maxDepth) return;
+    await for (final entity in directory.list(followLinks: false)) {
+      if (entity is File) {
+        final extension = p
+            .extension(entity.path)
+            .toLowerCase()
+            .replaceFirst('.', '');
+        if (['mp3', 'm4a', 'wav', 'flac', 'aac'].contains(extension)) {
+          try {
+            await _processMusicFile(entity);
+            successCount++;
+          } catch (e) {
+            failCount++;
+            failedFiles.add(entity.path);
+            print('Failed to process ${entity.path}: $e');
+          }
+        } else {
+          print('Unsupported file format: ${entity.path}');
+        }
+      } else if (entity is Directory) {
+        await processDirectoryWithProgress(
+          entity,
+          maxDepth: maxDepth,
+          currentDepth: currentDepth + 1,
+          fileCount: fileCount,
+          onProgress: onProgress,
         );
       }
     }
