@@ -156,7 +156,6 @@ class MusicImportService {
   }
 
   Future<void> _processMusicFile(File file) async {
-    try {
       final metadata = await readMetadata(file, getImage: true);
 
       final String title = metadata.title ?? p.basename(file.path);
@@ -209,14 +208,5 @@ class MusicImportService {
           albumArtPath: Value(albumArtPath),
         ),
       );
-    } catch (e) {
-      print('Error processing file ${file.path}: $e');
-      await database.insertSong(
-        SongsCompanion.insert(
-          title: p.basename(file.path),
-          filePath: file.path,
-        ),
-      );
-    }
-  }
+  } 
 }
