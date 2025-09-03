@@ -203,7 +203,11 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
                   await _loadSongs();
                 },
                 onImportFiles: () async {
-                  await importService.importFiles();
+                  await importService.importFiles(
+                    onProgress: (processed, total) {
+                      print('Processed $processed of $total files');
+                    },
+                  );
                   await _loadSongs();
                 },
               ),

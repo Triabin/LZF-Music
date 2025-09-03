@@ -17,11 +17,18 @@ class MusicImportService {
       lockParentWindow: true,
     );
     if (result != null) {
-      await _processDirectory(Directory(result));
+      await processDirectoryWithProgress(Directory(result), 
+        onProgress: (processed, total) {
+        print('Processed $processed of $total files');
+        },
+        fileCount: await countMusicFiles(Directory(result))
+      );
     }
   }
 
-  Future<void> importFiles() async {
+  Future<void> importFiles(
+    {required void Function(int processed, int total) onProgress}
+  ) async {
     final result = await FilePicker.platform.pickFiles(
       allowedExtensions: ['mp3', 'm4a', 'wav', 'flac', 'aac'],
       type: FileType.custom,
@@ -30,10 +37,19 @@ class MusicImportService {
     );
 
     if (result != null) {
+      int count = result.files.length;
+      int successCount = 0;
+      int failCount = 0;
       for (final file in result.files) {
         if (file.path != null) {
-          await _processMusicFile(File(file.path!));
+          try {
+            await _processMusicFile(File(file.path!));
+            successCount++;
+          } catch (e) {
+            failCount++;
+          }
         }
+        onProgress(successCount + failCount, count);
       }
     }
   }
@@ -140,6 +156,7 @@ class MusicImportService {
             failedFiles.add(entity.path);
             print('Failed to process ${entity.path}: $e');
           }
+          onProgress(successCount + failCount, fileCount);
         } else {
           print('Unsupported file format: ${entity.path}');
         }
