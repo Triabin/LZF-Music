@@ -12,30 +12,51 @@ class MusicImportService {
 
   MusicImportService(this.database);
 
-  Future<void> importFromDirectory() async {
+  Future<String> importFromDirectory({
+    void Function(int processed, int total)? onProgress,
+  }) async {
     final result = await FilePicker.platform.getDirectoryPath(
       lockParentWindow: true,
     );
     if (result != null) {
-      await _processDirectory(Directory(result));
+      return await processDirectoryWithProgress(Directory(result), 
+        onProgress: onProgress ?? (processed, total) {
+          print('Processed $processed of $total files');
+        },
+        fileCount: await countMusicFiles(Directory(result))
+      );
     }
+    return '';
   }
 
-  Future<void> importFiles() async {
+  Future<String> importFiles(
+    {required void Function(int processed, int total) onProgress}
+  ) async {
     final result = await FilePicker.platform.pickFiles(
       allowedExtensions: ['mp3', 'm4a', 'wav', 'flac', 'aac'],
       type: FileType.custom,
       allowMultiple: true,
       lockParentWindow: true,
     );
-
+    List<String> failedFiles = [];
     if (result != null) {
+      int count = result.files.length;
+      int successCount = 0;
+      int failCount = 0;
       for (final file in result.files) {
         if (file.path != null) {
-          await _processMusicFile(File(file.path!));
+          try {
+            await _processMusicFile(File(file.path!));
+            successCount++;
+          } catch (e) {
+            failCount++;
+            failedFiles.add(file.path!);
+          }
         }
+        onProgress(successCount + failCount, count);
       }
     }
+    return failedFiles.join(',');
   }
 
   Future<void> importLRC(Song song) async {
@@ -61,12 +82,45 @@ class MusicImportService {
     }
   }
 
-  Future<void> _processDirectory(
+  Future<int> countMusicFiles(
     Directory directory, {
     int maxDepth = 3,
     int currentDepth = 0,
   }) async {
-    if (currentDepth > maxDepth) return;
+    if (currentDepth > maxDepth) return 0;
+
+    int count = 0;
+
+    await for (final entity in directory.list(followLinks: false)) {
+      if (entity is File) {
+        final extension = p.extension(entity.path).toLowerCase().replaceFirst('.', '');
+        if (['mp3', 'm4a', 'wav', 'flac', 'aac'].contains(extension)) {
+          count++;
+        }
+      } else if (entity is Directory) {
+        count += await countMusicFiles(
+          entity,
+          maxDepth: maxDepth,
+          currentDepth: currentDepth + 1,
+        );
+      }
+    }
+
+    return count;
+  }
+
+  Future<String> processDirectoryWithProgress(
+    Directory directory, {
+    required int fileCount,
+    required void Function(int processed, int total) onProgress,
+    int successCount = 0,
+    int failCount = 0,
+    List<String>? failedFiles,
+    int maxDepth = 3,
+    int currentDepth = 0,
+  }) async {
+    failedFiles ??= [];
+    if (currentDepth > maxDepth) return '';
     await for (final entity in directory.list(followLinks: false)) {
       if (entity is File) {
         final extension = p
@@ -74,20 +128,33 @@ class MusicImportService {
             .toLowerCase()
             .replaceFirst('.', '');
         if (['mp3', 'm4a', 'wav', 'flac', 'aac'].contains(extension)) {
-          await _processMusicFile(entity);
+          try {
+            await _processMusicFile(entity);
+            successCount++;
+          } catch (e) {
+            failCount++;
+            failedFiles.add(entity.path);
+            print('Failed to process ${entity.path}: $e');
+          }
+          onProgress(successCount + failCount, fileCount);
+        } else {
+          print('Unsupported file format: ${entity.path}');
         }
       } else if (entity is Directory) {
-        await _processDirectory(
+        String failedSubdirectories = await processDirectoryWithProgress(
           entity,
           maxDepth: maxDepth,
           currentDepth: currentDepth + 1,
+          fileCount: fileCount,
+          onProgress: onProgress,
         );
+        failedFiles.add(failedSubdirectories);
       }
     }
+    return failedFiles.join(',');
   }
 
   Future<void> _processMusicFile(File file) async {
-    try {
       final metadata = await readMetadata(file, getImage: true);
 
       final String title = metadata.title ?? p.basename(file.path);
@@ -140,14 +207,5 @@ class MusicImportService {
           albumArtPath: Value(albumArtPath),
         ),
       );
-    } catch (e) {
-      print('Error processing file ${file.path}: $e');
-      await database.insertSong(
-        SongsCompanion.insert(
-          title: p.basename(file.path),
-          filePath: file.path,
-        ),
-      );
-    }
-  }
+  } 
 }

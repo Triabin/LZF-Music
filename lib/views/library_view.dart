@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../widgets/toggleable_popup_menu.dart';
 import '../widgets/show_aware_page.dart';
 import '../widgets/compact_center_snack_bar.dart';
+import '../widgets/import_progress_dialog.dart';
 
 class LibraryView extends StatefulWidget {
   const LibraryView({super.key});
@@ -199,11 +200,51 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
                   await _loadSongs();
                 },
                 onImportDirectory: () async {
-                  await importService.importFromDirectory();
+                  final updateProgress = await ImportProgressDialog.showImportDialog(context);
+                  updateProgress(isScanning: true);
+                  
+                  bool hasProgress = false; // 标记是否有进度更新
+                  
+                  String failedFiles = await importService.importFromDirectory(
+                    onProgress: (processed, total) {
+                      hasProgress = true; // 标记有进度更新
+                      updateProgress(processedFiles: processed, totalFiles: total, isScanning: false);
+                    }
+                  );
+                  
+                  // 检查是否有进度更新，如果没有说明用户取消了选择
+                  if (!hasProgress) {
+                    // 用户取消了选择，直接关闭对话框
+                    ImportProgressDialog.closeImportDialog(context);
+                  } else {
+                    // 有进度更新，显示完成状态
+                    updateProgress(isCompleted: true, failedFileName: failedFiles);
+                  }
+                  
                   await _loadSongs();
                 },
                 onImportFiles: () async {
-                  await importService.importFiles();
+                  final updateProgress = await ImportProgressDialog.showImportDialog(context);
+                  updateProgress(isScanning: true);
+                  
+                  bool hasProgress = false; // 标记是否有进度更新
+                  
+                  String failedFiles = await importService.importFiles(
+                    onProgress: (processed, total){
+                      hasProgress = true; // 标记有进度更新
+                      updateProgress(processedFiles: processed, totalFiles: total, isScanning: false);
+                    }
+                  );
+                  
+                  // 检查是否有进度更新，如果没有说明用户取消了选择
+                  if (!hasProgress) {
+                    // 用户取消了选择，直接关闭对话框
+                    ImportProgressDialog.closeImportDialog(context);
+                  } else {
+                    // 有进度更新，显示完成状态
+                    updateProgress(isCompleted: true, failedFileName: failedFiles);
+                  }
+                  
                   await _loadSongs();
                 },
               ),
