@@ -26,7 +26,7 @@ class MusicImportService {
     }
   }
 
-  Future<void> importFiles(
+  Future<String> importFiles(
     {required void Function(int processed, int total) onProgress}
   ) async {
     final result = await FilePicker.platform.pickFiles(
@@ -35,7 +35,7 @@ class MusicImportService {
       allowMultiple: true,
       lockParentWindow: true,
     );
-
+    List<String> failedFiles = [];
     if (result != null) {
       int count = result.files.length;
       int successCount = 0;
@@ -47,11 +47,13 @@ class MusicImportService {
             successCount++;
           } catch (e) {
             failCount++;
+            failedFiles.add(file.path!);
           }
         }
         onProgress(successCount + failCount, count);
       }
     }
+    return failedFiles.join(',');
   }
 
   Future<void> importLRC(Song song) async {

@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../widgets/toggleable_popup_menu.dart';
 import '../widgets/show_aware_page.dart';
 import '../widgets/compact_center_snack_bar.dart';
+import '../widgets/import_progress_dialog.dart';
 
 class LibraryView extends StatefulWidget {
   const LibraryView({super.key});
@@ -199,15 +200,20 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
                   await _loadSongs();
                 },
                 onImportDirectory: () async {
-                  await importService.importFromDirectory();
-                  await _loadSongs();
+                  // await importService.importFromDirectory();
+                  // await _loadSongs();
+                  final updateProgress = await ImportProgressDialog.showImportDialog(context);
+                  updateProgress(processedFiles: 5, totalFiles: 10, isScanning: false);
                 },
                 onImportFiles: () async {
-                  await importService.importFiles(
-                    onProgress: (processed, total) {
-                      print('Processed $processed of $total files');
-                    },
+                  final updateProgress = await ImportProgressDialog.showImportDialog(context);
+                  String failedFiles = await importService.importFiles(
+                    onProgress: (processed, total){
+                      updateProgress(processedFiles: processed, totalFiles: total, isScanning: false);
+
+                    }
                   );
+                  updateProgress(isCompleted: true, failedFileName: failedFiles);
                   await _loadSongs();
                 },
               ),
