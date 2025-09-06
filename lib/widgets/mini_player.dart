@@ -54,33 +54,30 @@ class _MiniPlayerState extends State<MiniPlayer> {
                           ),
                         );
                       },
-                      child: Hero(
-                        tag: 'player_background',
-                        child: Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6),
-                            image: currentSong?.albumArtPath != null
-                                ? DecorationImage(
-                                    image: FileImage(
-                                      File(currentSong!.albumArtPath!),
-                                    ),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
-                          ),
-                          child: currentSong?.albumArtPath == null
-                              ? const Icon(Icons.music_note_rounded, size: 24)
+                      child: Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          image: currentSong?.albumArtPath != null
+                              ? DecorationImage(
+                                  image: FileImage(
+                                    File(currentSong!.albumArtPath!),
+                                  ),
+                                  fit: BoxFit.cover,
+                                )
                               : null,
                         ),
+                        child: currentSong?.albumArtPath == null
+                            ? const Icon(Icons.music_note_rounded, size: 24)
+                            : null,
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   // 歌曲信息
                   SizedBox(
-                    width: 320, // 固定宽度
+                    width: 260, // 固定宽度
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -93,16 +90,41 @@ class _MiniPlayerState extends State<MiniPlayer> {
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
-                          currentSong?.artist ?? '选择歌曲开始播放',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 14,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                currentSong?.artist ?? '选择歌曲开始播放',
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                  fontSize: 14,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 92,
+                              child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "${_formatDuration(position)}/${_formatDuration(duration)}",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            ),
+                          ],
                         ),
-
-                        // 进度条 + 时间
+                        SizedBox(height: 8),
                         Row(
                           children: [
                             // 进度条
@@ -145,25 +167,15 @@ class _MiniPlayerState extends State<MiniPlayer> {
                                     : null,
                               ),
                             ),
-
-                            const SizedBox(width: 8),
-
-                            // 时间显示
-                            Text(
-                              "${_formatDuration(position)}/${_formatDuration(duration)}",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
                           ],
                         ),
+                        SizedBox(height: 6,)
                       ],
                     ),
                   ),
 
                   Spacer(), // 右侧弹性空白
-                  // 音量控制
+                  
                   Row(
                     children: [
                       IconButton(
