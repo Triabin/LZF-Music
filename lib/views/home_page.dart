@@ -225,22 +225,17 @@ class _HomePageState extends State<HomePage> {
                 child: Stack(
                   children: [
                     Container(color: bodyBg),
-                    Column(
-                      children: [
-                        Expanded(
-                          child: ValueListenableBuilder<PlayerPage>(
-                            valueListenable: menuManager.currentPage,
-                            builder: (context, currentPage, _) {
-                              return IndexedStack(
-                                index: currentPage.index,
-                                children: menuManager.pages,
-                              );
-                            },
-                          ),
-                        ),
-                        // 占位，腾出 MiniPlayer 高度
-                        const SizedBox(height: 80),
-                      ],
+                    // Library 视图延伸到底部
+                    Positioned.fill(
+                      child: ValueListenableBuilder<PlayerPage>(
+                        valueListenable: menuManager.currentPage,
+                        builder: (context, currentPage, _) {
+                          return IndexedStack(
+                            index: currentPage.index,
+                            children: menuManager.pages,
+                          );
+                        },
+                      ),
                     ),
 
                     // 悬浮 MiniPlayer
