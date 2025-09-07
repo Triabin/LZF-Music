@@ -35,7 +35,6 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
   int? _lastCurrentSongId;
   // 添加标记来区分是否是用户在当前页面点击的
   bool _isUserClickedFromThisPage = false;
-  bool _enableScrollAnimation = false;
 
   @override
   void onPageShow() {
@@ -192,51 +191,67 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
                   await _loadSongs();
                 },
                 onImportDirectory: () async {
-                  final updateProgress = await ImportProgressDialog.showImportDialog(context);
+                  final updateProgress =
+                      await ImportProgressDialog.showImportDialog(context);
                   updateProgress(isScanning: true);
-                  
+
                   bool hasProgress = false; // 标记是否有进度更新
-                  
+
                   String failedFiles = await importService.importFromDirectory(
                     onProgress: (processed, total) {
                       hasProgress = true; // 标记有进度更新
-                      updateProgress(processedFiles: processed, totalFiles: total, isScanning: false);
-                    }
+                      updateProgress(
+                        processedFiles: processed,
+                        totalFiles: total,
+                        isScanning: false,
+                      );
+                    },
                   );
-                  
+
                   // 检查是否有进度更新，如果没有说明用户取消了选择
                   if (!hasProgress) {
                     // 用户取消了选择，直接关闭对话框
                     ImportProgressDialog.closeImportDialog(context);
                   } else {
                     // 有进度更新，显示完成状态
-                    updateProgress(isCompleted: true, failedFileName: failedFiles);
+                    updateProgress(
+                      isCompleted: true,
+                      failedFileName: failedFiles,
+                    );
                   }
-                  
+
                   await _loadSongs();
                 },
                 onImportFiles: () async {
-                  final updateProgress = await ImportProgressDialog.showImportDialog(context);
+                  final updateProgress =
+                      await ImportProgressDialog.showImportDialog(context);
                   updateProgress(isScanning: true);
-                  
+
                   bool hasProgress = false; // 标记是否有进度更新
-                  
+
                   String failedFiles = await importService.importFiles(
-                    onProgress: (processed, total){
+                    onProgress: (processed, total) {
                       hasProgress = true; // 标记有进度更新
-                      updateProgress(processedFiles: processed, totalFiles: total, isScanning: false);
-                    }
+                      updateProgress(
+                        processedFiles: processed,
+                        totalFiles: total,
+                        isScanning: false,
+                      );
+                    },
                   );
-                  
+
                   // 检查是否有进度更新，如果没有说明用户取消了选择
                   if (!hasProgress) {
                     // 用户取消了选择，直接关闭对话框
                     ImportProgressDialog.closeImportDialog(context);
                   } else {
                     // 有进度更新，显示完成状态
-                    updateProgress(isCompleted: true, failedFileName: failedFiles);
+                    updateProgress(
+                      isCompleted: true,
+                      failedFileName: failedFiles,
+                    );
                   }
-                  
+
                   await _loadSongs();
                 },
               ),

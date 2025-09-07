@@ -174,74 +174,92 @@ jobs:
           body: |
             🎉 发布版本 ${{ github.ref_name }}
             🖥️ Windows 版本
-              •	安装程序：支持 Windows 10/11 (x64)
-              •	功能：自动创建桌面快捷方式
-              •	智能音频控制：
-              •	拔掉耳机自动暂停播放
-              •	耳机按钮控制播放 / 暂停 / 切歌
-              •	⌨️ 快捷键支持：
-              •	空格：播放 / 暂停
-              •	Ctrl ⌘ + 左右方向键：快进 / 快退
-              •	Ctrl ⌘ + 上下方向键：上一首 / 下一首
+            • 安装程序：支持 Windows 10/11 (x64)
+            • 功能：自动创建桌面快捷方式
+            • 智能音频控制：
+            • 拔掉耳机自动暂停播放
+            • 耳机按钮控制播放 / 暂停 / 切歌
+            • ⌨️ 快捷键支持：
+            • 空格：播放 / 暂停
+            • Ctrl ⌘ + 左右方向键：快进 / 快退
+            • Ctrl ⌘ + 上下方向键：上一首 / 下一首
+            • 播放页面动画优化：修改了播放页面的进入动画
+            • 更多状态保存：播放状态、列表位置、侧边栏状态等
+            • 支持主题切换
 
             🍎 macOS 版本
-              •	Intel (x86_64)：适用于 Intel Mac
-              •	Apple Silicon (arm64)：适用于 M1/M2 Mac
-              •	通用版 (universal)：同时支持 Intel 和 Apple Silicon
-              •	智能音频控制：
-              •	拔掉耳机自动暂停播放
-              •	耳机按钮控制播放 / 暂停 / 切歌
-              •	⌨️ 快捷键支持：
-              •	空格：播放 / 暂停
-              •	Command ⌘ + 左右方向键：快进 / 快退
-              •	Command ⌘ + 上下方向键：上一首 / 下一首
+            • Intel (x86_64)：适用于 Intel Mac
+            • Apple Silicon (arm64)：适用于 M1/M2 Mac
+            • 通用版 (universal)：同时支持 Intel 和 Apple Silicon
+            • 智能音频控制：
+            • 拔掉耳机自动暂停播放
+            • 耳机按钮控制播放 / 暂停 / 切歌
+            • ⌨️ 快捷键支持：
+            • 空格：播放 / 暂停
+            • Command ⌘ + 左右方向键：快进 / 快退
+            • Command ⌘ + 上下方向键：上一首 / 下一首
+            • 支持主题切换
+            • 背景高斯模糊与透明度调整
 
             ✨ 更新内容
-              • 支持按照添加时间排序
-              • 支持批量选择删除
-              • 优化音频播放稳定性与耳机控制体验
-              • 新增支持 M4A 与 ALAC 格式的比特率与采样率读取
-              • 支持系统托盘与后台运行
-              • 新增播放状态保存：退出应用后自动保存播放进度、音量、播放模式
-              • 新增自动定位当前歌曲：切换歌曲时列表自动滚动到当前播放位置
-              • 新增歌曲导入进度显示：可查看导入的实时进度与完成状态
+            • 支持按照添加时间排序
+            • 支持批量选择删除
+            • 优化音频播放稳定性与耳机控制体验
+            • 新增支持 M4A 与 ALAC 格式的比特率与采样率读取
+            • 支持系统托盘与后台运行
+            • 新增播放状态保存：退出应用后自动保存播放进度、音量、播放模式
+            • 新增自动定位当前歌曲：切换歌曲时列表自动滚动到当前播放位置
+            • 新增歌曲导入进度显示：可查看导入的实时进度与完成状态
+            • 播放页面动画优化，更多状态保存（列表位置、侧边栏展开状态）
+            • 支持主题切换
+            • **macOS 专属：支持背景高斯模糊与透明度调整**
 
             ⸻
 
             🎉 Release ${{ github.ref_name }}
 
             🖥️ Windows
-              •	Installer: Supports Windows 10/11 (x64)
-              •	Feature: Auto-create desktop shortcut
-              •	Smart Audio Control:
-              •	Auto-pause when headphones are unplugged
-              •	Headset buttons for play / pause / next / previous
-              •	⌨️ Keyboard Shortcuts:
-              •	Space: Play / Pause
-              •	Ctrl ⌘ + Left/Right Arrow: Seek backward / forward
-              •	Ctrl ⌘ + Up/Down Arrow: Previous / Next track
+            • Installer: Supports Windows 10/11 (x64)
+            • Feature: Auto-create desktop shortcut
+            • Smart Audio Control:
+            • Auto-pause when headphones are unplugged
+            • Headset buttons for play / pause / next / previous
+            • ⌨️ Keyboard Shortcuts:
+            • Space: Play / Pause
+            • Ctrl ⌘ + Left/Right Arrow: Seek backward / forward
+            • Ctrl ⌘ + Up/Down Arrow: Previous / Next track
+            • Playback page animation optimized
+            • More state persistence: playback state, playlist position, sidebar state
+            • Theme switching support
 
             🍎 macOS
-              •	Intel (x86_64): for Intel-based Macs
-              •	Apple Silicon (arm64): for M1/M2 Macs
-              •	Universal: supports both Intel & Apple Silicon
-              •	Smart Audio Control:
-              •	Auto-pause when headphones are unplugged
-              •	Headset buttons for play / pause / next / previous
-              •	⌨️ Keyboard Shortcuts:
-              •	Space: Play / Pause
-              •	Command ⌘ + Left/Right Arrow: Seek backward / forward
-              •	Command ⌘ + Up/Down Arrow: Previous / Next track
+            • Intel (x86_64): for Intel-based Macs
+            • Apple Silicon (arm64): for M1/M2 Macs
+            • Universal: supports both Intel & Apple Silicon
+            • Smart Audio Control:
+            • Auto-pause when headphones are unplugged
+            • Headset buttons for play / pause / next / previous
+            • ⌨️ Keyboard Shortcuts:
+            • Space: Play / Pause
+            • Command ⌘ + Left/Right Arrow: Seek backward / forward
+            • Command ⌘ + Up/Down Arrow: Previous / Next track
+            • Theme switching support
+            • Background blur & transparency adjustment
 
             ✨ What’s New
-              • Support sorting by added time
-              • Batch delete support
-              • Improved audio playback stability & headset control experience
-              • Added support for M4A & ALAC bitrate and sample rate parsing
-              • Added system tray integration and background running support
-              • New: Playback state persistence (save progress, volume, and play mode when exiting)
-              • New: Auto-scroll to current song in playlist when switching tracks
-              • New: Song import progress indicator (view real-time progress and completion status)
+            • Support sorting by added time
+            • Batch delete support
+            • Improved audio playback stability & headset control experience
+            • Added support for M4A & ALAC bitrate and sample rate parsing
+            • Added system tray integration and background running support
+            • New: Playback state persistence (save progress, volume, and play mode when exiting)
+            • New: Auto-scroll to current song in playlist when switching tracks
+            • New: Song import progress indicator (view real-time progress and completion status)
+            • Playback page animation optimized, more state persistence (playlist position, sidebar state)
+            • Theme switching support
+            • macOS only: Background blur & transparency adjustment
+
+            <img src="https://github.com/user-attachments/assets/8d5b9065-8cd8-4b1e-bb6e-32b9ae5f0f25" height="500">
           files: |
             macos-x86_64-dmg/*.dmg
             macos-arm64-dmg/*.dmg

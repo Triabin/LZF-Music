@@ -10,8 +10,6 @@ import '../widgets/show_aware_page.dart';
 import '../views/settings/settings_page.dart';
 import '../views/settings/storage_setting_page.dart';
 
-// 你项目中的其他 import...
-
 /// 单个菜单项
 class MenuItem {
   final IconData icon;
@@ -34,8 +32,22 @@ class MenuItem {
   Widget buildPage() => builder(pageKey);
 }
 
-// REMOVED: 不再需要 MenuSubItem 类，因为它导致了 Widget 实例的预先创建，是问题的根源。
-// class MenuSubItem { ... }
+/// 菜单子项数据模型
+class MenuSubItem {
+  final String routeName;
+  final String title;
+  final Widget Function() builder; // 改为 builder 函数避免预创建
+  final IconData? icon;
+
+  const MenuSubItem({
+    required this.routeName,
+    required this.title,
+    required this.builder,
+    this.icon,
+  });
+
+  Widget buildPage() => builder();
+}
 
 /// 菜单和页面统一管理器
 class MenuManager {
@@ -50,9 +62,6 @@ class MenuManager {
     PlayerPage.library,
   );
 
-  /// 菜单是否展开
-  final ValueNotifier<bool> isExtended = ValueNotifier(true);
-
   /// 当前 hover 的菜单项
   final ValueNotifier<int> hoverIndex = ValueNotifier(-1);
 
@@ -65,14 +74,18 @@ class MenuManager {
   /// 所有菜单项
   late final List<MenuItem> items;
 
-  // REMOVED: 不再需要 subItems 列表
-  // late final List<MenuSubItem> subItems;
+  /// 二级菜单项配置
+  late final List<MenuSubItem> subItems;
 
   /// 初始化（必须调用一次）
-  Future<void> init({required GlobalKey<NavigatorState> navigatorKey}) async {
+  Future<void> init({
+    required GlobalKey<NavigatorState> navigatorKey,
+    List<MenuSubItem>? subMenuItems, // 可选参数，允许从外部传入
+  }) async {
     this.navigatorKey = navigatorKey;
 
-    // REMOVED: subItems 的初始化代码已被移除
+    // 设置二级菜单项，如果没有传入则使用默认配置
+    subItems = subMenuItems ?? _getDefaultSubItems();
 
     items = [
       MenuItem(
@@ -107,7 +120,6 @@ class MenuManager {
         pageKey: GlobalKey<RecentlyPlayedViewState>(),
         builder: (key) => RecentlyPlayedView(key: key),
       ),
-      // CHANGED: 修改了设置页面的 MenuItem
       MenuItem(
         icon: Icons.settings_rounded,
         iconSize: 22.0,
@@ -117,8 +129,8 @@ class MenuManager {
         builder: (key) => NestedNavigatorWrapper(
           key: key,
           navigatorKey: navigatorKey,
-          initialRoute: '/', // 定义初始路由
-          // 不再传递预先创建好的 pages 列表
+          initialRoute: '/',
+          subItems: subItems, // 将二级菜单配置传递给包装器
         ),
       ),
     ];
@@ -131,6 +143,40 @@ class MenuManager {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _notifyPageShow(items[currentPage.value.index].pageKey);
     });
+  }
+
+  /// 获取默认的二级菜单项配置
+  List<MenuSubItem> _getDefaultSubItems() {
+    return [
+      MenuSubItem(
+        routeName: '/',
+        title: '设置首页',
+        builder: () => SettingsPage(key: GlobalKey<SettingsPageState>()),
+        icon: Icons.settings,
+      ),
+      MenuSubItem(
+        routeName: '/settings/storage',
+        title: '存储设置',
+        builder: () => const StorageSettingPage(),
+        icon: Icons.storage,
+      ),
+    ];
+  }
+
+  /// 根据路由名称查找对应的页面
+  Widget? getPageByRoute(String routeName) {
+    try {
+      return subItems
+          .firstWhere((item) => item.routeName == routeName)
+          .buildPage();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// 获取所有路由名称
+  List<String> getAllRoutes() {
+    return subItems.map((item) => item.routeName).toList();
   }
 
   void setPage(PlayerPage page) {
@@ -162,21 +208,16 @@ class MenuManager {
   }
 }
 
-// =======================================================================
-// CHANGED: NestedNavigatorWrapper 的改动
-// =======================================================================
-
 class NestedNavigatorWrapper extends StatefulWidget {
   final GlobalKey<NavigatorState> navigatorKey;
   final String initialRoute;
-  // REMOVED: 不再需要 pages 列表
-  // final List<Widget> pages;
+  final List<MenuSubItem> subItems; // 接收二级菜单配置
 
   const NestedNavigatorWrapper({
     super.key,
     required this.navigatorKey,
     required this.initialRoute,
-    // required this.pages, // 移除
+    required this.subItems,
   });
 
   @override
@@ -190,59 +231,110 @@ class NestedNavigatorWrapperState extends State<NestedNavigatorWrapper>
   @override
   void onPageShow() {
     print('NestedNavigatorWrapper onPageShow');
-    // 你可以在这里执行页面显示时的逻辑
+
+    // 直接调用第一个子路由的 onPageShow
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _notifyFirstSubPageShow();
+    });
+  }
+
+  /// 通知第一个子页面显示
+  void _notifyFirstSubPageShow() {
+    // 直接通过navigator context查找ShowAwarePage
+    final navigator = navigatorKey.currentState;
+    if (navigator != null) {
+      _findAndNotifyShowAwarePage(navigator.context);
+    }
+  }
+
+  /// 通知页面显示
+  void _notifyPageShow(MenuSubItem subItem) {
+    // 直接通过navigator context查找ShowAwarePage
+    final navigator = navigatorKey.currentState;
+    if (navigator != null) {
+      _findAndNotifyShowAwarePage(navigator.context);
+    }
+  }
+
+  /// 在Widget树中查找并通知ShowAwarePage
+  void _findAndNotifyShowAwarePage(BuildContext context) {
+    void visitor(Element element) {
+      final widget = element.widget;
+      final state = element is StatefulElement ? element.state : null;
+
+      if (state is ShowAwarePage) {
+        state.onPageShow();
+        return; // 找到第一个就停止
+      }
+
+      element.visitChildren(visitor);
+    }
+
+    try {
+      context.visitChildElements(visitor);
+    } catch (e) {
+      print('查找ShowAwarePage时出错: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // 定义 Material Design 标准的动画曲线
+    final Animatable<Offset> enterTween = Tween<Offset>(
+      begin: const Offset(1.0, 0.0),
+      end: Offset.zero,
+    ).chain(CurveTween(curve: Curves.fastOutSlowIn));
+
+    final Animatable<Offset> exitTween = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(-1.0, 0.0),
+    ).chain(CurveTween(curve: Curves.fastOutSlowIn));
+
     return Navigator(
       key: widget.navigatorKey,
       initialRoute: widget.initialRoute,
-      // CHANGED: 使用 onGenerateRoute 动态构建页面，这是解决问题的关键
       onGenerateRoute: (settings) {
         Widget page;
-
-        // 根据路由名称 (settings.name) 来决定创建哪个页面
-        switch (settings.name) {
-          case '/':
-            // 每次需要时都创建一个新的 SettingsPage 实例
-            // 这样就不会有 GlobalKey 冲突
-            page = SettingsPage(key: GlobalKey<SettingsPageState>());
-            break;
-          case '/settings/storage':
-            // 示例：如果你有其他子页面，可以在这里添加
-            page = const StorageSettingPage(); // 假设这个页面不需要 GlobalKey
-            break;
-          default:
-            // 处理未知路由，避免崩溃
-            page = Scaffold(
-              body: Center(
-                child: Text('未知路由: ${settings.name}'),
-              ),
-            );
+        try {
+          final subItem = widget.subItems.firstWhere(
+            (item) => item.routeName == settings.name,
+          );
+          page = subItem.buildPage();
+        } catch (e) {
+          page = Scaffold(body: Center(child: Text('未知路由: ${settings.name}')));
         }
 
-        // 返回一个 MaterialPageRoute 来承载新创建的页面
-        return MaterialPageRoute(
-          builder: (_) => page,
-          settings: settings, // 将路由设置传递给新页面
+        return PageRouteBuilder(
+          settings: settings,
+          transitionDuration: const Duration(milliseconds: 300),
+          pageBuilder: (context, animation, secondaryAnimation) => page,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: animation.drive(enterTween),
+              child: SlideTransition(
+                position: secondaryAnimation.drive(exitTween),
+                child: child,
+              ),
+            );
+          },
         );
       },
     );
   }
 }
 
-/// 辅助类，用于在子页面中进行导航
+// 导航助手类
 class NestedNavigationHelper {
-  /// 跳转到嵌套路由中的新页面
   static void push(BuildContext context, String routeName) {
-    // 使用 rootNavigator: false 来确保在嵌套的 Navigator 中跳转
     Navigator.of(context, rootNavigator: false).pushNamed(routeName);
   }
 
-  /// 从嵌套路由中返回
   static void pop(BuildContext context) {
-    // 使用 rootNavigator: false 来确保在嵌套的 Navigator 中返回
     Navigator.of(context, rootNavigator: false).pop();
+  }
+
+  // 根据菜单项导航
+  static void pushByMenuItem(BuildContext context, MenuSubItem menuItem) {
+    Navigator.of(context, rootNavigator: false).pushNamed(menuItem.routeName);
   }
 }

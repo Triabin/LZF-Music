@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:lzf_music/utils/theme_utils.dart';
 import '../widgets/mini_player.dart';
-
+import 'package:provider/provider.dart';
+import '../../services/theme_provider.dart';
 import '../contants/app_contants.dart' show PlayerPage;
 import '../router/router.dart';
+import 'dart:ui';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,23 +31,36 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final brightness = theme.brightness;
+    
+    return Consumer<AppThemeProvider>(
+      builder: (context, themeProvider, child) {
+        final defaultTextColor = ThemeUtils.select(context, light: Colors.black, dark: Colors.white);
+        Color sidebarBg = ThemeUtils.select(
+          context,
+          light: themeProvider.lightBg,
+          dark: themeProvider.darkBg,
+        );
+        Color bodyBg = ThemeUtils.select(
+          context,
+          light: themeProvider.lightBg,
+          dark: themeProvider.darkBg,
+        );
+        if (["window", "sidebar"].contains(themeProvider.opacityTarget)) {
+          sidebarBg = sidebarBg.withAlpha(
+            (255 * themeProvider.seedAlpha).round(),
+          );
+        }
+        if (["window", "body"].contains(themeProvider.opacityTarget)) {
+          bodyBg = bodyBg.withAlpha((255 * themeProvider.seedAlpha).round());
+        }
 
-    final defaultTextColor = brightness == Brightness.dark
-        ? Colors.grey[300]!
-        : Colors.grey[800]!;
-
-    return Scaffold(
-      body: Row(
-        children: [
-          // 侧边菜单栏
-          ValueListenableBuilder<bool>(
-            valueListenable: menuManager.isExtended,
-            builder: (context, isExtended, _) {
-              return AnimatedContainer(
+        return Scaffold(
+          body: Row(
+            children: [
+              AnimatedContainer(
+                color: sidebarBg,
                 duration: const Duration(milliseconds: 200),
-                width: isExtended ? 220 : 70,
-                color: theme.colorScheme.surface,
+                width: themeProvider.sidebarIsExtended ? 220 : 70,
                 child: Column(
                   children: [
                     Padding(
@@ -73,7 +89,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   );
                                 },
-                            child: isExtended
+                            child: themeProvider.sidebarIsExtended
                                 ? const Text(
                                     ' Music',
                                     style: TextStyle(
@@ -119,61 +135,68 @@ class _HomePageState extends State<HomePage> {
                                     menuManager.hoverIndex.value = index,
                                 onExit: (_) =>
                                     menuManager.hoverIndex.value = -1,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(8),
-                                  onTap: () => _onTabChanged(index),
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: bgColor,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          item.icon,
-                                          color: textColor,
-                                          size: item.iconSize,
-                                        ),
-                                        Flexible(
-                                          child: AnimatedSwitcher(
-                                            duration: const Duration(
-                                              milliseconds: 200,
-                                            ),
-                                            child: isExtended
-                                                ? Padding(
-                                                    key: const ValueKey('text'),
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                          left: 12,
-                                                        ),
-                                                    child: Text(
-                                                      item.label,
-                                                      style: TextStyle(
-                                                        color: textColor,
-                                                        fontWeight: isSelected
-                                                            ? FontWeight.bold
-                                                            : FontWeight.normal,
-                                                      ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  )
-                                                : const SizedBox(
-                                                    width: 0,
-                                                    key: ValueKey('empty'),
-                                                  ),
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: bgColor,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(8),
+                                    onTap: () => _onTabChanged(index),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            item.icon,
+                                            color: textColor,
+                                            size: item.iconSize,
                                           ),
-                                        ),
-                                      ],
+                                          Flexible(
+                                            child: AnimatedSwitcher(
+                                              duration: const Duration(
+                                                milliseconds: 200,
+                                              ),
+                                              child:
+                                                  themeProvider
+                                                      .sidebarIsExtended
+                                                  ? Padding(
+                                                      key: const ValueKey(
+                                                        'text',
+                                                      ),
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                            left: 12,
+                                                          ),
+                                                      child: Text(
+                                                        item.label,
+                                                        style: TextStyle(
+                                                          color: textColor,
+                                                          fontWeight: isSelected
+                                                              ? FontWeight.bold
+                                                              : FontWeight
+                                                                    .normal,
+                                                        ),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    )
+                                                  : const SizedBox(
+                                                      width: 0,
+                                                      key: ValueKey('empty'),
+                                                    ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -186,58 +209,54 @@ class _HomePageState extends State<HomePage> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),
                       child: IconButton(
-                        icon: ValueListenableBuilder<bool>(
-                          valueListenable: menuManager.isExtended,
-                          builder: (context, isExtended, _) {
-                            return Icon(
-                              isExtended
-                                  ? Icons.arrow_back_rounded
-                                  : Icons.menu_rounded,
-                            );
-                          },
+                        icon: Icon(
+                          themeProvider.sidebarIsExtended
+                              ? Icons.arrow_back_rounded
+                              : Icons.menu_rounded,
                         ),
-                        onPressed: () => menuManager.isExtended.value =
-                            !menuManager.isExtended.value,
+                        onPressed: () => themeProvider.toggleExtended(),
                       ),
                     ),
                   ],
                 ),
-              );
-            },
-          ),
-          const VerticalDivider(width: 1, thickness: 1),
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(
-                  child: ValueListenableBuilder<PlayerPage>(
-                    valueListenable: menuManager.currentPage,
-                    builder: (context, currentPage, _) {
-                      return IndexedStack(
-                        index: currentPage.index,
-                        children: menuManager.pages,
-                      );
-                    },
-                  ),
+              ),
+              const VerticalDivider(width: 1, thickness: 1),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Container(color: bodyBg),
+                    Column(
+                      children: [
+                        Expanded(
+                          child: ValueListenableBuilder<PlayerPage>(
+                            valueListenable: menuManager.currentPage,
+                            builder: (context, currentPage, _) {
+                              return IndexedStack(
+                                index: currentPage.index,
+                                children: menuManager.pages,
+                              );
+                            },
+                          ),
+                        ),
+                        // 占位，腾出 MiniPlayer 高度
+                        const SizedBox(height: 80),
+                      ],
+                    ),
+
+                    // 悬浮 MiniPlayer
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: const MiniPlayer(),
+                    ),
+                  ],
                 ),
-                Container(
-                  height: 90,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: const MiniPlayer(),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

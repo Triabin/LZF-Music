@@ -17,7 +17,7 @@ class DesktopManager {
 
       const WindowOptions windowOptions = WindowOptions(
         size: Size(1080, 720),
-        minimumSize: Size(1080, 720),
+        minimumSize: Size(1050, 720),
         center: true,
         backgroundColor: Colors.transparent,
         skipTaskbar: false,
@@ -29,6 +29,8 @@ class DesktopManager {
         await windowManager.setPreventClose(true);
         await windowManager.show();
         await windowManager.focus();
+
+    await windowManager.setBackgroundColor(Colors.transparent);
       });
 
       await _initTray();

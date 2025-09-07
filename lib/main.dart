@@ -81,6 +81,7 @@ class _MainAppState extends State<MainApp> with DesktopWindowMixin {
       builder: (context, themeProvider, child) {
         return MyKeyboardHandler(
           child: MaterialApp(
+            color: Colors.transparent,
             title: 'LZF Music',
             debugShowCheckedModeBanner: false,
             theme: themeProvider.buildLightTheme(),

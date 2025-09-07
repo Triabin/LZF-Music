@@ -8,6 +8,8 @@
 ![2](./doc/images/2.png)
 ![3](./doc/images/3.png)
 ![4](./doc/images/4.png)
+![5](./doc/images/5.png)
+![6](./doc/images/6.png)
 
 ### ✨ **核心特性**
 
@@ -27,8 +29,12 @@
 
 ### 🤝 **如何贡献**
 
-我们欢迎任何形式的贡献！无论是提交代码、报告问题还是提出新功能的建议，都对我们至关重要。请访问我们的 [GitHub 仓库](在此处插入你的 GitHub 仓库链接) 开始。
+我们欢迎任何形式的贡献！无论是提交代码、报告问题还是提出新功能的建议，都对我们至关重要。请访问我们的 [LZF Music](https://github.com/GerryDush/LZF-Music) 开始。
 
 ### 📜 **许可证**
 
 本项目基于 **Apache License 2.0** 许可证开源。
+
+### 📜 **欢迎进群交流**
+
+<img src="https://github.com/user-attachments/assets/8d5b9065-8cd8-4b1e-bb6e-32b9ae5f0f25" height="500">
