@@ -579,6 +579,7 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
                   controller: _scrollController,
                   itemCount: songs.length,
                   itemExtent: 70,
+                  padding: const EdgeInsets.only(bottom: 80),
                   itemBuilder: (context, index) {
                     final isHovered = !_isScrolling && _hoveredIndex == index;
                     final isSelected =

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../views/now_playing_screen.dart';
@@ -29,9 +30,24 @@ class _MiniPlayerState extends State<MiniPlayer> {
         final position = playerProvider.position;
         final duration = playerProvider.duration;
 
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        return ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDarkMode 
+                    ? Colors.black.withOpacity(0.3)
+                    : Colors.white.withOpacity(0.7),
+                border: Border.all(
+                  color: isDarkMode 
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.black.withOpacity(0.1),
+                  width: 0.5,
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
             // 主控制栏
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -40,6 +56,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
               ),
               child: Row(
                 children: [
+                  const SizedBox(width: 4),
                   // 歌曲封面
                   MouseRegion(
                     cursor: SystemMouseCursors.click,
@@ -373,7 +390,10 @@ class _MiniPlayerState extends State<MiniPlayer> {
                   ],
                 ),
               ),
-          ],
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
