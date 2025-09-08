@@ -3,9 +3,7 @@ import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../widgets/slider_custom.dart';
 import '../services/player_provider.dart';
-import '../contants/app_contants.dart' show PlayMode;
 import 'package:lzf_music/widgets/lyrics_view.dart';
 import 'package:lzf_music/widgets/music_control_panel.dart';
 
@@ -160,261 +158,30 @@ class _ImprovedNowPlayingScreenState extends State<ImprovedNowPlayingScreen> {
                                           ),
                                   ),
                                   const SizedBox(height: 24),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          currentSong?.title ?? "未知歌曲",
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          currentSong?.artist ?? "未知歌手",
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 18,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  AnimatedTrackHeightSlider(
-                                    value: _tempSliderValue >= 0
-                                        ? _tempSliderValue
-                                        : currentPosition,
-                                    max: totalDuration,
-                                    min: 0,
-                                    activeColor: Colors.white,
-                                    inactiveColor: Colors.white30,
-                                    onChanged: (value) {
+                                  SongInfoPanel(
+                                    currentSong: currentSong,
+                                    currentPosition: currentPosition,
+                                    totalDuration: totalDuration,
+                                    tempSliderValue: _tempSliderValue,
+                                    onSliderChanged: (value) {
                                       setState(() {
                                         _tempSliderValue = value; // 暂存比例
                                       });
                                     },
-                                    onChangeEnd: (value) {
+                                    onSliderChangeEnd: (value) {
                                       setState(() {
-                                        _tempSliderValue =
-                                            -1; // 复位，用实时 position 控制
+                                        _tempSliderValue = -1; // 复位，用实时 position 控制
                                       });
                                       playerProvider.seekTo(
                                         Duration(seconds: value.toInt()),
                                       );
                                     },
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        formatDuration(
-                                          Duration(
-                                            seconds: currentPosition.toInt(),
-                                          ),
-                                        ),
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Center(
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(
-                                                0.08,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Text(
-                                              "${currentSong?.bitrate != null ? (currentSong!.bitrate! / 1000).toStringAsFixed(0) : '未知'} kbps",
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        formatDuration(
-                                          Duration(
-                                            seconds: totalDuration.toInt(),
-                                          ),
-                                        ),
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
+                                    playerProvider: playerProvider,
                                   ),
                                   const SizedBox(height: 24),
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        iconSize: 20,
-                                        color: Colors.white70,
-                                        icon: Icon(
-                                          Icons.shuffle_rounded,
-                                          color:
-                                              playerProvider.playMode ==
-                                                  PlayMode.shuffle
-                                              ? Colors.white
-                                              : null,
-                                        ),
-                                        onPressed: () {
-                                          if (playerProvider.playMode ==
-                                              PlayMode.shuffle) {
-                                            playerProvider.setPlayMode(
-                                              PlayMode.sequence,
-                                            );
-                                            return;
-                                          }
-                                          playerProvider.setPlayMode(
-                                            PlayMode.shuffle,
-                                          );
-                                        },
-                                      ),
-                                      Expanded(
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            IconButton(
-                                              iconSize: 48,
-                                              color:
-                                                  (playerProvider.hasPrevious ||
-                                                      playerProvider.playMode ==
-                                                          PlayMode.loop)
-                                                  ? Colors.white
-                                                  : Colors.white70,
-                                              icon: const Icon(
-                                                Icons.skip_previous_rounded,
-                                              ),
-                                              onPressed: () =>
-                                                  playerProvider.previous(),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            IconButton(
-                                              iconSize: 64,
-                                              color: Colors.white,
-                                              icon: Icon(
-                                                isPlaying
-                                                    ? Icons.pause_rounded
-                                                    : Icons.play_arrow_rounded,
-                                              ),
-                                              onPressed: () =>
-                                                  playerProvider.togglePlay(),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            IconButton(
-                                              iconSize: 48,
-                                              color:
-                                                  (playerProvider.hasNext ||
-                                                      playerProvider.playMode ==
-                                                          PlayMode.loop)
-                                                  ? Colors.white
-                                                  : Colors.white70,
-                                              icon: const Icon(
-                                                Icons.skip_next_rounded,
-                                              ),
-                                              onPressed: () =>
-                                                  playerProvider.next(),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      IconButton(
-                                        iconSize: 20,
-                                        color: Colors.white70,
-                                        icon: Icon(
-                                          playerProvider.playMode ==
-                                                  PlayMode.singleLoop
-                                              ? Icons.repeat_one_rounded
-                                              : Icons.repeat_rounded,
-                                          color:
-                                              playerProvider.playMode ==
-                                                      PlayMode.loop ||
-                                                  playerProvider.playMode ==
-                                                      PlayMode.singleLoop
-                                              ? Colors.white
-                                              : null,
-                                        ),
-                                        onPressed: () {
-                                          if (playerProvider.playMode ==
-                                              PlayMode.singleLoop) {
-                                            playerProvider.setPlayMode(
-                                              PlayMode.sequence,
-                                            );
-                                            return;
-                                          }
-                                          playerProvider.setPlayMode(
-                                            playerProvider.playMode ==
-                                                    PlayMode.loop
-                                                ? PlayMode.singleLoop
-                                                : PlayMode.loop,
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.volume_down_rounded,
-                                          color: Colors.white70,
-                                        ),
-                                        onPressed: () {
-                                          playerProvider.setVolume(
-                                            playerProvider.volume - 0.1,
-                                          );
-                                        },
-                                      ),
-                                      Expanded(
-                                        child: AnimatedTrackHeightSlider(
-                                          trackHeight: 4,
-                                          value: playerProvider.volume,
-                                          max: 1.0,
-                                          min: 0,
-                                          activeColor: Colors.white,
-                                          inactiveColor: Colors.white30,
-                                          onChanged: (value) {
-                                            playerProvider.setVolume(value);
-                                          },
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.volume_up_rounded,
-                                          color: Colors.white70,
-                                        ),
-                                        onPressed: () {
-                                          playerProvider.setVolume(
-                                            playerProvider.volume + 0.1,
-                                          );
-                                        },
-                                      ),
-                                    ],
+                                  MusicControlButtons(
+                                    playerProvider: playerProvider,
+                                    isPlaying: isPlaying,
                                   ),
                                 ],
                               ),
@@ -523,53 +290,5 @@ class _MeasureSizeState extends State<MeasureSize> {
     });
 
     return widget.child;
-  }
-}
-
-
-
-class NoGlowScrollBehavior extends ScrollBehavior {
-  @override
-  Widget buildOverscrollIndicator(
-    BuildContext context,
-    Widget child,
-    ScrollableDetails details,
-  ) => child;
-  @override
-  Widget buildScrollbar(
-    BuildContext context,
-    Widget child,
-    ScrollableDetails details,
-  ) => child;
-}
-
-class HoverIconButton extends StatefulWidget {
-  final VoidCallback onPressed;
-
-  const HoverIconButton({super.key, required this.onPressed});
-
-  @override
-  State<HoverIconButton> createState() => _HoverIconButtonState();
-}
-
-class _HoverIconButtonState extends State<HoverIconButton> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: widget.onPressed,
-      borderRadius: BorderRadius.circular(4), // 圆角大小
-      onHover: (v) {
-        setState(() {
-          _isHovered = !_isHovered;
-        });
-      },
-      child: Icon(
-        _isHovered ? Icons.keyboard_arrow_down_rounded : Icons.remove_rounded,
-        color: Colors.white,
-        size: 50,
-      ),
-    );
   }
 }
