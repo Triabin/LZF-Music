@@ -108,7 +108,7 @@ class LyricsTimerManager {
     ScrollController scrollController,
     Map<int, double> lineHeights,
     double placeholderHeight,
-    bool isHoveringLyrics,
+    bool Function() getIsHoveringLyrics,  // 改为函数
   ) {
     return Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (!mounted()) return;
@@ -132,7 +132,7 @@ class LyricsTimerManager {
           0,
           lineHeights,
           placeholderHeight,
-          isHoveringLyrics: isHoveringLyrics,
+          isHoveringLyrics: getIsHoveringLyrics(),  // 调用函数获取最新状态
         );
       }
     });
@@ -354,6 +354,8 @@ class _HoverableLyricLineState extends State<HoverableLyricLine> {
   void _updateHover(bool hover) {
     if (isHovered != hover) {
       setState(() => isHovered = hover);
+      // 添加调试输出
+      print('歌词悬停状态改变: $hover');
       if (widget.onHoverChanged != null) {
         widget.onHoverChanged!(hover);
       }

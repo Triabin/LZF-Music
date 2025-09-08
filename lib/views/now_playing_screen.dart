@@ -59,7 +59,7 @@ class _ImprovedNowPlayingScreenState extends State<ImprovedNowPlayingScreen> {
       _scrollController,
       lineHeights,
       placeholderHeight,
-      isHoveringLyrics,
+      () => isHoveringLyrics,  // 改为函数
     );
   }
 
