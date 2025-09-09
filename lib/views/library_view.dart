@@ -5,10 +5,10 @@ import '../database/database.dart';
 import '../services/music_import_service.dart';
 import '../services/player_provider.dart';
 import 'package:provider/provider.dart';
-import '../widgets/toggleable_popup_menu.dart';
 import '../widgets/show_aware_page.dart';
 import '../widgets/compact_center_snack_bar.dart';
 import '../widgets/import_progress_dialog.dart';
+import '../widgets/music_list_header.dart';
 
 class LibraryView extends StatefulWidget {
   const LibraryView({super.key});
@@ -256,322 +256,100 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
                 },
               ),
               const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.06),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 60),
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '歌曲名称',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  ToggleablePopupMenu<String>(
-                                    isSelected: orderField == 'title',
-                                    tooltip: '按照歌名排序',
-                                    options: <MenuOption<String>>[
-                                      MenuOption(label: '默认', value: null),
-                                      MenuOption(label: '顺序', value: 'asc'),
-                                      MenuOption(label: '倒序', value: 'desc'),
-                                    ],
-                                    selectedValue: orderDirection,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        orderField = value == null
-                                            ? null
-                                            : 'title';
-                                        orderDirection = value;
-                                        _loadSongs();
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '艺术家',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  ToggleablePopupMenu<String>(
-                                    isSelected: orderField == 'artist',
-                                    tooltip: '按照艺术家排序',
-                                    options: <MenuOption<String>>[
-                                      MenuOption(label: '默认', value: null),
-                                      MenuOption(label: '顺序', value: 'asc'),
-                                      MenuOption(label: '倒序', value: 'desc'),
-                                    ],
-                                    selectedValue: orderDirection,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        orderField = value == null
-                                            ? null
-                                            : 'artist';
-                                        orderDirection = value;
-                                        _loadSongs();
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '专辑',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  ToggleablePopupMenu<String>(
-                                    isSelected: orderField == 'album',
-                                    tooltip: '按照专辑排序',
-                                    options: <MenuOption<String>>[
-                                      MenuOption(label: '默认', value: null),
-                                      MenuOption(label: '顺序', value: 'asc'),
-                                      MenuOption(label: '倒序', value: 'desc'),
-                                    ],
-                                    selectedValue: orderDirection,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        orderField = value == null
-                                            ? null
-                                            : 'album';
-                                        orderDirection = value;
-                                        _loadSongs();
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 70,
-                              child: Text(
-                                '采样率',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 80,
-                              child: Text(
-                                '比特率',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 60,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '时长',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  ToggleablePopupMenu<String>(
-                                    isSelected: orderField == 'duration',
-                                    tooltip: '按照时长排序',
-                                    options: <MenuOption<String>>[
-                                      MenuOption(label: '默认', value: null),
-                                      MenuOption(label: '顺序', value: 'asc'),
-                                      MenuOption(label: '倒序', value: 'desc'),
-                                    ],
-                                    selectedValue: orderDirection,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        orderField = value == null
-                                            ? null
-                                            : 'duration';
-                                        orderDirection = value;
-                                        _loadSongs();
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: !_showCheckbox ? 48 : 8),
-                      if (_showCheckbox)
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert),
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 'hide',
-                              child: Text('隐藏选择框'),
-                            ),
-                            const PopupMenuItem(
-                              value: 'delete',
-                              child: Text(
-                                '删除所选歌曲',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                          onSelected: (value) async {
-                            if (value == 'delete') {
-                              bool? confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('确认删除'),
-                                  content: const Text('确定要删除所选歌曲吗？'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: const Text('取消'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      child: const Text(
-                                        '确定',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-
-                              if (confirm == true) {
-                                if (checkedIds.isEmpty) {
-                                  CompactCenterSnackBar.show(
-                                    context,
-                                    '请勾选你要删除的歌曲',
-                                  );
-                                  return;
-                                }
-                                int len = checkedIds.length;
-                                for (var id in checkedIds) {
-                                  database.deleteSong(id);
-                                }
-                                CompactCenterSnackBar.show(
-                                  context,
-                                  "已删除${len}首歌",
-                                );
-                                _loadSongs();
-                                setState(() {
-                                  checkedIds.clear();
-                                  _showCheckbox = false;
-                                });
-                              }
-                            } else if (value == 'hide') {
-                              setState(() {
-                                checkedIds.clear();
-                                _showCheckbox = false;
-                              });
-                            }
-                          },
-                        ),
-                      if (_showCheckbox)
-                        Checkbox(
-                          value:
-                              checkedIds.length == songs.length &&
-                              songs.isNotEmpty,
-                          onChanged: (v) {
-                            setState(() {
-                              if (v == true) {
-                                checkedIds
-                                  ..clear()
-                                  ..addAll(songs.map((s) => s.id));
-                              } else {
-                                checkedIds.clear();
-                              }
-                            });
-                          },
-                        ),
-                      if (!_showCheckbox)
-                        PopupMenuButton<String>(
-                          icon: Icon(
-                            Icons.more_vert_rounded,
-                            color: orderField == 'id'
-                                ? Theme.of(context).colorScheme.primary
-                                : null,
+              MusicListHeader(
+                songs: songs,
+                orderField: orderField,
+                orderDirection: orderDirection,
+                showCheckbox: _showCheckbox,
+                checkedIds: checkedIds,
+                allowReorder: true, // 库视图允许重排列
+                onShowCheckboxToggle: () {
+                  setState(() {
+                    _showCheckbox = true;
+                  });
+                },
+                onScrollToCurrent: () {
+                  final playerProvider = Provider.of<PlayerProvider>(
+                    context,
+                    listen: false,
+                  );
+                  final currentSongId = playerProvider.currentSong?.id;
+                  if (currentSongId != null) {
+                    _scrollToCurrentSong(currentSongId);
+                  } else {
+                    CompactCenterSnackBar.show(context, '当前没有播放歌曲');
+                  }
+                },
+                onOrderChanged: (field, direction) {
+                  setState(() {
+                    orderField = field;
+                    orderDirection = direction;
+                  });
+                  _loadSongs();
+                },
+                onSelectAllChanged: (selectAll) {
+                  setState(() {
+                    if (selectAll) {
+                      checkedIds
+                        ..clear()
+                        ..addAll(songs.map((s) => s.id));
+                    } else {
+                      checkedIds.clear();
+                    }
+                  });
+                },
+                onBatchAction: (action) async {
+                  if (action == 'delete') {
+                    bool? confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('确认删除'),
+                        content: const Text('确定要删除所选歌曲吗？'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('取消'),
                           ),
-                          iconSize: 20,
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'sort_by_id_asc',
-                              child: Text(
-                                orderField == 'id' ? '默认排序' : '根据添加时间顺序排序',
-                              ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text(
+                              '确定',
+                              style: TextStyle(color: Colors.red),
                             ),
-                            PopupMenuItem(value: 'show', child: Text('显示选择框')),
-                            // 添加"定位到当前播放"选项
-                            PopupMenuItem(
-                              value: 'scroll_to_current',
-                              child: Text('定位到当前播放'),
-                            ),
-                          ],
-                          onSelected: (value) {
-                            if (value == 'show') {
-                              setState(() {
-                                _showCheckbox = true;
-                              });
-                              return;
-                            }
-                            if (value == 'sort_by_id_asc') {
-                              if (orderField == 'id') {
-                                orderField = null;
-                                orderDirection = null;
-                              } else {
-                                orderField = 'id';
-                                orderDirection = 'asc';
-                              }
-                              _loadSongs();
-                              return;
-                            }
-                            // 添加手动定位到当前播放歌曲的功能
-                            if (value == 'scroll_to_current') {
-                              final playerProvider =
-                                  Provider.of<PlayerProvider>(
-                                    context,
-                                    listen: false,
-                                  );
-                              final currentSongId =
-                                  playerProvider.currentSong?.id;
-                              if (currentSongId != null) {
-                                _scrollToCurrentSong(currentSongId);
-                              } else {
-                                CompactCenterSnackBar.show(context, '当前没有播放歌曲');
-                              }
-                              return;
-                            }
-                          },
-                        ),
-                    ],
-                  ),
-                ),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      if (checkedIds.isEmpty) {
+                        CompactCenterSnackBar.show(
+                          context,
+                          '请勾选你要删除的歌曲',
+                        );
+                        return;
+                      }
+                      int len = checkedIds.length;
+                      for (var id in checkedIds) {
+                        database.deleteSong(id);
+                      }
+                      CompactCenterSnackBar.show(
+                        context,
+                        "已删除${len}首歌",
+                      );
+                      _loadSongs();
+                      setState(() {
+                        checkedIds.clear();
+                        _showCheckbox = false;
+                      });
+                    }
+                  } else if (action == 'hide') {
+                    setState(() {
+                      checkedIds.clear();
+                      _showCheckbox = false;
+                    });
+                  }
+                },
               ),
               const SizedBox(height: 8),
               Expanded(

@@ -7,6 +7,7 @@ import '../services/player_provider.dart';
 import 'package:provider/provider.dart';
 import '../widgets/show_aware_page.dart';
 import '../widgets/compact_center_snack_bar.dart';
+import '../widgets/music_list_header.dart';
 
 class PlaylistsView extends StatefulWidget {
   const PlaylistsView({super.key});
@@ -107,98 +108,9 @@ class PlaylistsViewState extends State<PlaylistsView> with ShowAwarePage {
             children: [
               LibraryHeader(songs: songs),
               const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.06),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 60), // 封面图宽度 + 间距
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '歌曲名称',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '艺术家',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '专辑',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 70,
-                              child: Text(
-                                '采样率',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 80,
-                              child: Text(
-                                '比特率',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 60,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '时长',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 80, height: 40), // 为更多按钮预留空间
-                    ],
-                  ),
-                ),
+              MusicListHeader(
+                songs: songs,
+                allowReorder: false, // 播放列表页面不允许重排列
               ),
               const SizedBox(height: 8),
               Expanded(

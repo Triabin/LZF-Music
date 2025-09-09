@@ -5,9 +5,9 @@ import '../database/database.dart';
 import '../services/music_import_service.dart';
 import '../services/player_provider.dart';
 import 'package:provider/provider.dart';
-import '../widgets/toggleable_popup_menu.dart';
 import '../widgets/show_aware_page.dart';
 import '../widgets/compact_center_snack_bar.dart';
+import '../widgets/music_list_header.dart';
 
 class FavoritesView extends StatefulWidget {
   const FavoritesView({super.key});
@@ -138,175 +138,18 @@ class FavoritesViewState extends State<FavoritesView> with ShowAwarePage {
                 },
               ),
               const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.06),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 60), // 封面图宽度 + 间距
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '歌曲名称',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  ToggleablePopupMenu<String>(
-                                    isSelected: orderField == 'title',
-                                    tooltip: '按照歌名排序',
-                                    options: <MenuOption<String>>[
-                                      MenuOption(label: '默认', value: null),
-                                      MenuOption(label: '顺序', value: 'asc'),
-                                      MenuOption(label: '倒序', value: 'desc'),
-                                    ],
-                                    selectedValue: orderDirection,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        orderField = value == null
-                                            ? null
-                                            : 'title';
-                                        orderDirection = value;
-                                        _loadSongs();
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '艺术家',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  ToggleablePopupMenu<String>(
-                                    isSelected: orderField == 'artist',
-                                    tooltip: '按照艺术家排序',
-                                    options: <MenuOption<String>>[
-                                      MenuOption(label: '默认', value: null),
-                                      MenuOption(label: '顺序', value: 'asc'),
-                                      MenuOption(label: '倒序', value: 'desc'),
-                                    ],
-                                    selectedValue: orderDirection,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        orderField = value == null
-                                            ? null
-                                            : 'artist';
-                                        orderDirection = value;
-                                        _loadSongs();
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '专辑',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  ToggleablePopupMenu<String>(
-                                    isSelected: orderField == 'album',
-                                    tooltip: '按照专辑排序',
-                                    options: <MenuOption<String>>[
-                                      MenuOption(label: '默认', value: null),
-                                      MenuOption(label: '顺序', value: 'asc'),
-                                      MenuOption(label: '倒序', value: 'desc'),
-                                    ],
-                                    selectedValue: orderDirection,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        orderField = value == null
-                                            ? null
-                                            : 'album';
-                                        orderDirection = value;
-                                        _loadSongs();
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 70,
-                              child: Text(
-                                '采样率',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 80,
-                              child: Text(
-                                '比特率',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 60,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    '时长',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  ToggleablePopupMenu<String>(
-                                    isSelected: orderField == 'duration',
-                                    tooltip: '按照时长排序',
-                                    options: <MenuOption<String>>[
-                                      MenuOption(label: '默认', value: null),
-                                      MenuOption(label: '顺序', value: 'asc'),
-                                      MenuOption(label: '倒序', value: 'desc'),
-                                    ],
-                                    selectedValue: orderDirection,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        orderField = value == null
-                                            ? null
-                                            : 'duration';
-                                        orderDirection = value;
-                                        _loadSongs();
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 80,height: 40,), // 为更多按钮预留空间
-                    ],
-                  ),
-                ),
+              MusicListHeader(
+                songs: songs,
+                orderField: orderField,
+                orderDirection: orderDirection,
+                allowReorder: true, // 收藏页面允许重排列
+                onOrderChanged: (field, direction) {
+                  setState(() {
+                    orderField = field;
+                    orderDirection = direction;
+                  });
+                  _loadSongs();
+                },
               ),
               const SizedBox(height: 8),
               Expanded(
