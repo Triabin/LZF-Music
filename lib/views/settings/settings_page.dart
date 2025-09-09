@@ -44,7 +44,7 @@ class SettingsPageState extends State<SettingsPage> with ShowAwarePage {
             child: FocusScope(
               canRequestFocus: false, // 整个范围内的子控件都不能抢焦点
               child: ListView(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 88.0), // 底部留出88单位空间（8+80）
                 children: [
                   _buildSectionHeader('外观设置'),
                   _buildThemeSettingCard(),
