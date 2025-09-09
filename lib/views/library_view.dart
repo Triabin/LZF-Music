@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
+
 import 'dart:async';
 import '../database/database.dart';
 import '../services/music_import_service.dart';
@@ -9,6 +9,7 @@ import '../widgets/show_aware_page.dart';
 import '../widgets/compact_center_snack_bar.dart';
 import '../widgets/import_progress_dialog.dart';
 import '../widgets/music_list_header.dart';
+import '../widgets/music_list_view.dart';
 
 class LibraryView extends StatefulWidget {
   const LibraryView({super.key});
@@ -18,7 +19,6 @@ class LibraryView extends StatefulWidget {
 }
 
 class LibraryViewState extends State<LibraryView> with ShowAwarePage {
-  int? _hoveredIndex;
   bool _isScrolling = false;
   Timer? _scrollTimer;
   final ScrollController _scrollController = ScrollController();
@@ -66,7 +66,6 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
               _scrollController.position.minScrollExtent) {
         setState(() {
           _isScrolling = true;
-          _hoveredIndex = null;
         });
       }
 
@@ -160,14 +159,6 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
     _scrollTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  String _formatDuration(int seconds) {
-    final duration = Duration(seconds: seconds);
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final secondsStr = twoDigits(duration.inSeconds.remainder(60));
-    return "$minutes:$secondsStr";
   }
 
   @override
@@ -353,289 +344,32 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
               ),
               const SizedBox(height: 8),
               Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  itemCount: songs.length,
-                  itemExtent: 70,
-                  padding: const EdgeInsets.only(bottom: 80),
-                  itemBuilder: (context, index) {
-                    final isHovered = !_isScrolling && _hoveredIndex == index;
-                    final isSelected =
-                        playerProvider.currentSong?.id == songs[index].id;
-                    return Card(
-                      elevation: 0,
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      color: isSelected
-                          ? Theme.of(
-                              context,
-                            ).colorScheme.primary.withOpacity(0.1)
-                          : isHovered
-                          ? Colors.grey.withOpacity(0.1)
-                          : Colors.transparent,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              onEnter: (_) =>
-                                  setState(() => _hoveredIndex = index),
-                              onExit: (_) =>
-                                  setState(() => _hoveredIndex = null),
-                              child: GestureDetector(
-                                onDoubleTap: () {
-                                  // 标记这是用户在当前页面的点击操作
-                                  _isUserClickedFromThisPage = true;
-                                  playerProvider.playSong(
-                                    songs[index],
-                                    playlist: songs,
-                                    index: index,
-                                  );
-                                },
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  child: Stack(
-                                    children: [
-                                      Positioned.fill(
-                                        child: Container(
-                                          color: Colors.transparent,
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(8),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              width: 50,
-                                              height: 50,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
-                                              child:
-                                                  songs[index].albumArtPath !=
-                                                      null
-                                                  ? ClipRRect(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            4,
-                                                          ),
-                                                      child: Image.file(
-                                                        File(
-                                                          songs[index]
-                                                              .albumArtPath!,
-                                                        ),
-                                                        width: 50,
-                                                        height: 50,
-                                                        fit: BoxFit.cover,
-                                                        cacheWidth: 150,
-                                                        cacheHeight: 150,
-                                                      ),
-                                                    )
-                                                  : const Icon(
-                                                      Icons.music_note_rounded,
-                                                    ),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Expanded(
-                                              child: Row(
-                                                children: [
-                                                  Expanded(
-                                                    flex: 3,
-                                                    child: Text(
-                                                      songs[index].title,
-                                                      style: TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: isSelected
-                                                            ? Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary
-                                                            : Theme.of(context)
-                                                                  .colorScheme
-                                                                  .onSurface,
-                                                      ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 2,
-                                                    child: Text(
-                                                      songs[index].artist ??
-                                                          '未知艺术家',
-                                                      style: TextStyle(
-                                                        color: isSelected
-                                                            ? Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary
-                                                            : Theme.of(context)
-                                                                  .colorScheme
-                                                                  .onSurface,
-                                                      ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 2,
-                                                    child: Text(
-                                                      songs[index].album ??
-                                                          '未知专辑',
-                                                      style: TextStyle(
-                                                        color: isSelected
-                                                            ? Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary
-                                                            : Theme.of(context)
-                                                                  .colorScheme
-                                                                  .onSurface,
-                                                      ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                  SizedBox(
-                                                    width: 70,
-                                                    child: Text(
-                                                      songs[index].sampleRate !=
-                                                              null
-                                                          ? '${(songs[index].sampleRate! / 1000).toStringAsFixed(1)} kHz'
-                                                          : '',
-                                                      style: TextStyle(
-                                                        color: isSelected
-                                                            ? Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary
-                                                            : Theme.of(context)
-                                                                  .colorScheme
-                                                                  .onSurface,
-                                                      ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                  SizedBox(
-                                                    width: 80,
-                                                    child: Text(
-                                                      songs[index].bitrate !=
-                                                              null
-                                                          ? '${(songs[index].bitrate! / 1000).toStringAsFixed(0)} kbps'
-                                                          : '',
-                                                      style: TextStyle(
-                                                        color: isSelected
-                                                            ? Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary
-                                                            : Theme.of(context)
-                                                                  .colorScheme
-                                                                  .onSurface,
-                                                      ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                  SizedBox(
-                                                    width: 60,
-                                                    child: Text(
-                                                      _formatDuration(
-                                                        songs[index].duration ??
-                                                            0,
-                                                      ),
-                                                      style: TextStyle(
-                                                        color: isSelected
-                                                            ? Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary
-                                                            : Theme.of(context)
-                                                                  .colorScheme
-                                                                  .onSurface,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              database.updateSong(
-                                songs[index].copyWith(
-                                  isFavorite: !songs[index].isFavorite,
-                                ),
-                              );
-                              CompactCenterSnackBar.show(
-                                context,
-                                songs[index].isFavorite
-                                    ? '已取消收藏 ${songs[index].title} - ${songs[index].artist ?? '未知艺术家'}'
-                                    : '已收藏 ${songs[index].title} - ${songs[index].artist ?? '未知艺术家'}',
-                              );
-                              setState(() {
-                                songs[index] = songs[index].copyWith(
-                                  isFavorite: !songs[index].isFavorite,
-                                );
-                              });
-                            },
-                            iconSize: 20,
-                            icon: Icon(
-                              songs[index].isFavorite
-                                  ? Icons.favorite_rounded
-                                  : Icons.favorite_outline_rounded,
-                              color: songs[index].isFavorite
-                                  ? Colors.red
-                                  : null,
-                            ),
-                          ),
-                          _showCheckbox
-                              ? Checkbox(
-                                  value: checkedIds.contains(songs[index].id),
-                                  onChanged: (v) {
-                                    if (v == true) {
-                                      checkedIds.add(songs[index].id);
-                                    } else {
-                                      checkedIds.remove(songs[index].id);
-                                    }
-                                  },
-                                )
-                              : PopupMenuButton<String>(
-                                  icon: const Icon(Icons.more_vert_rounded),
-                                  iconSize: 20,
-                                  itemBuilder: (context) => const [
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text('删除'),
-                                    ),
-                                  ],
-                                  onSelected: (value) async {
-                                    if (value == 'delete') {
-                                      database.deleteSong(songs[index].id);
-                                      CompactCenterSnackBar.show(
-                                        context,
-                                        "已删除 ${songs[index].title} - ${songs[index].artist ?? '未知艺术家'}",
-                                      );
-                                      _loadSongs();
-                                    }
-                                  },
-                                ),
-                        ],
-                      ),
-                    );
+                child: MusicListView(
+                  songs: songs,
+                  scrollController: _scrollController,
+                  playerProvider: playerProvider,
+                  database: database,
+                  showCheckbox: _showCheckbox,
+                  checkedIds: checkedIds,
+                  onSongDeleted: _loadSongs,
+                  onSongUpdated: () {
+                    setState(() {
+                      // 触发重建以更新收藏状态
+                    });
+                  },
+                  onSongPlay: (song, playlist, index) {
+                    // 标记这是用户在当前页面的点击操作
+                    _isUserClickedFromThisPage = true;
+                    playerProvider.playSong(song, playlist: playlist, index: index);
+                  },
+                  onCheckboxChanged: (songId, isChecked) {
+                    setState(() {
+                      if (isChecked) {
+                        checkedIds.add(songId);
+                      } else {
+                        checkedIds.remove(songId);
+                      }
+                    });
                   },
                 ),
               ),
