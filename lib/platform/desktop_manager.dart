@@ -18,16 +18,6 @@ class DesktopManager {
       await windowManager.ensureInitialized();
       await Window.initialize();
 
-      final isDark =
-          PlatformDispatcher.instance.platformBrightness == Brightness.dark;
-      if (Platform.isMacOS) {
-        await Window.setEffect(effect: WindowEffect.hudWindow, dark: isDark);
-        Window.setBlurViewState(MacOSBlurViewState.active);
-      }
-      if (Platform.isWindows) {
-        await Window.setEffect(effect: WindowEffect.acrylic, dark: isDark);
-      }
-
       const WindowOptions windowOptions = WindowOptions(
         size: Size(1080, 720),
         minimumSize: Size(1050, 720),
@@ -44,6 +34,15 @@ class DesktopManager {
         await windowManager.focus();
 
         await windowManager.setBackgroundColor(Colors.transparent);
+        if (Platform.isMacOS) {
+          await Window.setEffect(
+            effect: WindowEffect.hudWindow,
+            dark:
+                PlatformDispatcher.instance.platformBrightness ==
+                Brightness.dark,
+          );
+          Window.setBlurViewState(MacOSBlurViewState.active);
+        }
       });
 
       await _initTray();
@@ -63,6 +62,14 @@ class DesktopManager {
           win.size = const Size(1080, 720);
           win.alignment = Alignment.center;
           win.show();
+          if (Platform.isWindows) {
+            Window.setEffect(
+              effect: WindowEffect.mica,
+              dark:
+                  PlatformDispatcher.instance.platformBrightness ==
+                  Brightness.dark,
+            );
+          }
         });
       }
     } catch (e) {

@@ -25,46 +25,63 @@ class SettingsPageState extends State<SettingsPage> with ShowAwarePage {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body:  Padding(
-      padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                '设置',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Expanded(
-            child: FocusScope(
-              canRequestFocus: false, // 整个范围内的子控件都不能抢焦点
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 88.0), // 底部留出88单位空间（8+80）
-                children: [
-                  _buildSectionHeader('外观设置'),
-                  _buildThemeSettingCard(),
-                  const SizedBox(height: 18),
-                  _buildSectionHeader('存储设置'),
-                  _buildStorageSettingCard(),
-                  const SizedBox(height: 18),
-                  _buildSectionHeader('播放设置'),
-                  _buildPlaybackSettingCard(),
-                  const SizedBox(height: 18),
-                  _buildSectionHeader('其他设置'),
-                  _buildOtherSettingsCard(),
-                  SizedBox(height: 88,)
-                ],
-              ),
+    return Consumer<AppThemeProvider>(
+      builder: (context, themeProvider, child) {
+        final isMiniPlayerFloating =
+            (themeProvider.opacityTarget == 'sidebar' ||
+            themeProvider.seedAlpha > 0.98);
+        return Scaffold(
+          body: Padding(
+            padding: EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      '设置',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Expanded(
+                  child: FocusScope(
+                    canRequestFocus: false, // 整个范围内的子控件都不能抢焦点
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                        8.0,
+                        8.0,
+                        8.0,
+                        8.0,
+                      ), // 底部留出88单位空间（8+80）
+                      children: [
+                        _buildSectionHeader('外观设置'),
+                        _buildThemeSettingCard(),
+                        const SizedBox(height: 18),
+                        _buildSectionHeader('存储设置'),
+                        _buildStorageSettingCard(),
+                        const SizedBox(height: 18),
+                        _buildSectionHeader('播放设置'),
+                        _buildPlaybackSettingCard(),
+                        const SizedBox(height: 18),
+                        _buildSectionHeader('其他设置'),
+                        _buildOtherSettingsCard(),
+                        SizedBox(height: isMiniPlayerFloating ? 84 : 0),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-    ));
+        );
+      },
+    );
   }
 
   // 构建分组标题
@@ -120,11 +137,11 @@ class SettingsPageState extends State<SettingsPage> with ShowAwarePage {
                   ),
                 ),
                 title: Text(
-                  '主题色${PlatformUtils.isMacOS ? '&背景透明度(高斯模糊)' : ''}',
+                  '主题色&背景透明度(高斯模糊)',
                   style: TextStyle(fontWeight: FontWeight.w500),
                 ),
                 subtitle: Text(
-                  '通过调色盘调整主题色${PlatformUtils.isMacOS ? '和背景透明度' : ''}',
+                  '通过调色盘调整主题色和背景透明度',
                 ), // 可以显示色名或者 HEX，如 themeProvider.seedColor.toString()
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () async {
@@ -140,89 +157,77 @@ class SettingsPageState extends State<SettingsPage> with ShowAwarePage {
                           children: [
                             // 颜色选择器
                             ColorPicker(
-                          hexInputBar: true,
-                          paletteType: PaletteType.rgbWithBlue,
-                          displayThumbColor: true,
-                          portraitOnly: true,
-                          enableAlpha: PlatformUtils.isMacOS,
-                          labelTypes: [],
-                          colorPickerWidth: 300,
-                          onHistoryChanged: (color) {
-                          },
-                          colorHistory: [
-                            Color(0xFF016B5B),
-                            Colors.red,
-                            Colors.green,
-                            Colors.blue,
-                            Colors.orange,
-                            Colors.purple,
-                            Colors.pink,
-                            Colors.amber,
-                          ],
-                          pickerColor: themeProvider.seedColor,
-                          onColorChanged: (color) {
-                            themeProvider.setSeedColor(color);
-                          },
-                        ),
+                              hexInputBar: true,
+                              paletteType: PaletteType.rgbWithBlue,
+                              displayThumbColor: true,
+                              portraitOnly: true,
+                              enableAlpha: true,
+                              labelTypes: [],
+                              colorPickerWidth: 300,
+                              onHistoryChanged: (color) {},
+                              colorHistory: [
+                                Color(0xFF016B5B),
+                                Colors.red,
+                                Colors.green,
+                                Colors.blue,
+                                Colors.orange,
+                                Colors.purple,
+                                Colors.pink,
+                                Colors.amber,
+                              ],
+                              pickerColor: themeProvider.seedColor,
+                              onColorChanged: (color) {
+                                themeProvider.setSeedColor(color);
+                              },
+                            ),
 
-                            if (PlatformUtils.isMacOS) ...[
-                              const SizedBox(height: 20),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    "透明区域",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  "透明区域",
+                                  style: TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Radio<String>(
+                                      value: "window",
+                                      groupValue: themeProvider.opacityTarget,
+                                      onChanged: (value) {
+                                        if (value != null) {
+                                          themeProvider.setOpacityTarget(value);
+                                        }
+                                      },
                                     ),
-                                  ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Radio<String>(
-                                        value: "window",
-                                        groupValue: themeProvider.opacityTarget,
-                                        onChanged: (value) {
-                                          if (value != null) {
-                                            themeProvider.setOpacityTarget(
-                                              value,
-                                            );
-                                          }
-                                        },
-                                      ),
-                                      const Text("窗口"),
-                                      SizedBox(width: 12),
-                                      Radio<String>(
-                                        value: "sidebar",
-                                        groupValue: themeProvider.opacityTarget,
-                                        onChanged: (value) {
-                                          if (value != null) {
-                                            themeProvider.setOpacityTarget(
-                                              value,
-                                            );
-                                          }
-                                        },
-                                      ),
-                                      const Text("仅侧边栏"),
-                                      SizedBox(width: 12),
-                                      Radio<String>(
-                                        value: "body",
-                                        groupValue: themeProvider.opacityTarget,
-                                        onChanged: (value) {
-                                          if (value != null) {
-                                            themeProvider.setOpacityTarget(
-                                              value,
-                                            );
-                                          }
-                                        },
-                                      ),
-                                      const Text("仅主体"),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    const Text("窗口"),
+                                    SizedBox(width: 12),
+                                    Radio<String>(
+                                      value: "sidebar",
+                                      groupValue: themeProvider.opacityTarget,
+                                      onChanged: (value) {
+                                        if (value != null) {
+                                          themeProvider.setOpacityTarget(value);
+                                        }
+                                      },
+                                    ),
+                                    const Text("仅侧边栏"),
+                                    SizedBox(width: 12),
+                                    Radio<String>(
+                                      value: "body",
+                                      groupValue: themeProvider.opacityTarget,
+                                      onChanged: (value) {
+                                        if (value != null) {
+                                          themeProvider.setOpacityTarget(value);
+                                        }
+                                      },
+                                    ),
+                                    const Text("仅主体"),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -689,10 +694,8 @@ class _LibraryHeaderState extends State<LibraryHeader> {
 }
 
 class TransparentPageRoute<T> extends PageRoute<T> {
-  TransparentPageRoute({
-    required this.builder,
-    RouteSettings? settings,
-  }) : super(settings: settings, fullscreenDialog: false);
+  TransparentPageRoute({required this.builder, RouteSettings? settings})
+    : super(settings: settings, fullscreenDialog: false);
 
   final WidgetBuilder builder;
 
@@ -712,19 +715,23 @@ class TransparentPageRoute<T> extends PageRoute<T> {
   Duration get transitionDuration => const Duration(milliseconds: 350); // 动画时长
 
   @override
-  Widget buildPage(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation) {
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
     return builder(context);
   }
 
   @override
-  Widget buildTransitions(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation, Widget child) {
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
     // 我们只对新页面（child）应用淡入动画
     // 旧页面（由 secondaryAnimation 控制）我们不给它应用任何动画，让它保持静止
-    return FadeTransition(
-      opacity: animation,
-      child: child,
-    );
+    return FadeTransition(opacity: animation, child: child);
   }
 }

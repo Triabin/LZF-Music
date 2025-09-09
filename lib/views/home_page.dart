@@ -50,6 +50,10 @@ class _HomePageState extends State<HomePage> {
           bodyBg = bodyBg.withAlpha((255 * themeProvider.seedAlpha).round());
         }
 
+        final isMiniPlayerFloating =
+            (themeProvider.opacityTarget == 'sidebar' ||
+            themeProvider.seedAlpha > 0.98);
+
         return Scaffold(
           body: Row(
             children: [
@@ -220,37 +224,68 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: Stack(
                   children: [
-                    ValueListenableBuilder<PlayerPage>(
-                      valueListenable: menuManager.currentPage,
-                      builder: (context, currentPage, _) {
-                        return Container(
-                          color: bodyBg,
-                          child: IndexedStack(
-                            index: currentPage.index,
-                            children: menuManager.pages,
-                          ),
-                        );
-                      },
+                    // 主内容区域
+                    Container(
+                      color: bodyBg,
+                      child: isMiniPlayerFloating
+                          ? MediaQuery(
+                              data: MediaQuery.of(context).copyWith(
+                                padding: MediaQuery.of(context).padding
+                                    .copyWith(
+                                      bottom:
+                                          MediaQuery.of(
+                                            context,
+                                          ).padding.bottom +
+                                          88,
+                                    ),
+                              ),
+                              child: ValueListenableBuilder<PlayerPage>(
+                                valueListenable: menuManager.currentPage,
+                                builder: (context, currentPage, _) {
+                                  return IndexedStack(
+                                    index: currentPage.index,
+                                    children: menuManager.pages,
+                                  );
+                                },
+                              ),
+                            )
+                          : Padding(
+                              padding: EdgeInsets.only(bottom: 84),
+                              child: ValueListenableBuilder<PlayerPage>(
+                                valueListenable: menuManager.currentPage,
+                                builder: (context, currentPage, _) {
+                                  return IndexedStack(
+                                    index: currentPage.index,
+                                    children: menuManager.pages,
+                                  );
+                                },
+                              ),
+                            ),
                     ),
-                    // MiniPlayer 悬浮在上方
+
+                    // MiniPlayer
                     Positioned(
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      child: ClipRect(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Container(
-                            height: 88,
-                            decoration: BoxDecoration(
-                              color: ThemeUtils.backgroundColor(
-                                context,
-                              ).withValues(alpha: 0.2),
-                            ),
-                            child: const MiniPlayer(),
-                          ),
-                        ),
-                      ),
+                      child: isMiniPlayerFloating
+                          ? ClipRect(
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: 10,
+                                  sigmaY: 10,
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: ThemeUtils.backgroundColor(
+                                      context,
+                                    ).withValues(alpha: 0.6),
+                                  ),
+                                  child: const MiniPlayer(),
+                                ),
+                              ),
+                            )
+                          : const MiniPlayer(),
                     ),
                   ],
                 ),

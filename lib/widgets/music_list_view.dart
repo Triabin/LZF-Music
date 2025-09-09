@@ -144,7 +144,6 @@ class _MusicListViewState extends State<MusicListView> {
         controller: widget.scrollController,
         itemCount: widget.songs.length,
         itemExtent: 70,
-        padding: const EdgeInsets.only(bottom: 80),
         itemBuilder: (context, index) {
           final song = widget.songs[index];
           final isHovered = !_isScrolling && _hoveredIndex == index;

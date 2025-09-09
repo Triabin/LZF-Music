@@ -70,7 +70,7 @@ class AppThemeProvider extends ChangeNotifier {
         Window.setBlurViewState(MacOSBlurViewState.active);
       }
       if (PlatformUtils.isWindows) {
-        Window.setEffect(effect: WindowEffect.acrylic, dark: isDark);
+        Window.setEffect(effect: WindowEffect.mica, dark: isDark);
         Window.setBlurViewState(MacOSBlurViewState.active);
       }
     }
