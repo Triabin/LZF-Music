@@ -38,6 +38,9 @@ class MusicListView extends StatefulWidget {
 class _MusicListViewState extends State<MusicListView> {
   int? _hoveredIndex;
   bool _isScrolling = false;
+  
+  // 为每个歌曲的收藏状态创建 ValueNotifier
+  final Map<int, ValueNotifier<bool>> _favoriteNotifiers = {};
 
   String _formatDuration(int seconds) {
     final duration = Duration(seconds: seconds);
@@ -62,18 +65,37 @@ class _MusicListViewState extends State<MusicListView> {
 
   void _handleFavoriteToggle(int index) {
     final song = widget.songs[index];
+    final newFavoriteState = !song.isFavorite;
+    
+    // 更新数据库
     widget.database.updateSong(
-      song.copyWith(isFavorite: !song.isFavorite),
+      song.copyWith(isFavorite: newFavoriteState),
     );
+    
+    // 更新本地列表中的歌曲状态
+    widget.songs[index] = song.copyWith(isFavorite: newFavoriteState);
+    
+    // 只更新对应歌曲的收藏状态通知器
+    _getFavoriteNotifier(song.id).value = newFavoriteState;
     
     CompactCenterSnackBar.show(
       context,
-      song.isFavorite
-          ? '已取消收藏 ${song.title} - ${song.artist ?? '未知艺术家'}'
-          : '已收藏 ${song.title} - ${song.artist ?? '未知艺术家'}',
+      newFavoriteState
+          ? '已收藏 ${song.title} - ${song.artist ?? '未知艺术家'}'
+          : '已取消收藏 ${song.title} - ${song.artist ?? '未知艺术家'}',
     );
     
     widget.onSongUpdated?.call();
+  }
+  
+  // 获取或创建收藏状态通知器
+  ValueNotifier<bool> _getFavoriteNotifier(int songId) {
+    return _favoriteNotifiers.putIfAbsent(
+      songId, 
+      () => ValueNotifier<bool>(
+        widget.songs.firstWhere((s) => s.id == songId).isFavorite
+      )
+    );
   }
 
   void _handleSongDelete(int index) {
@@ -86,6 +108,16 @@ class _MusicListViewState extends State<MusicListView> {
     );
     
     widget.onSongDeleted?.call();
+  }
+  
+  @override
+  void dispose() {
+    // 清理 ValueNotifier 资源
+    for (var notifier in _favoriteNotifiers.values) {
+      notifier.dispose();
+    }
+    _favoriteNotifiers.clear();
+    super.dispose();
   }
 
   @override
@@ -266,9 +298,20 @@ class _MusicListViewState extends State<MusicListView> {
                   ),
                 ),
                 // 收藏按钮
-                FavoriteButton(
-                  song: song,
-                  onToggle: () => _handleFavoriteToggle(index),
+                ValueListenableBuilder<bool>(
+                  valueListenable: _getFavoriteNotifier(song.id),
+                  builder: (context, isFavorite, child) {
+                    return IconButton(
+                      onPressed: () => _handleFavoriteToggle(index),
+                      iconSize: 20,
+                      icon: Icon(
+                        isFavorite
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_outline_rounded,
+                        color: isFavorite ? Colors.red : null,
+                      ),
+                    );
+                  },
                 ),
                 // 复选框或更多菜单
                 widget.showCheckbox
