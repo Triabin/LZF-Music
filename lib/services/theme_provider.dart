@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:lzf_music/utils/theme_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/platform_utils.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart';
+import 'dart:ui';
 
 class AppThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'theme_mode';
@@ -11,13 +14,10 @@ class AppThemeProvider extends ChangeNotifier {
   static const _sidebarIsExtendedKey = 'theme_sidebar_is_extended';
 
   ThemeMode _themeMode = ThemeMode.system;
-  final lightBg = Color(0xffededed);
-  final darkBg = Color(0xff191919);
   Color _seedColor = const Color(0xFF016B5B); // 默认主题色
   double _seedAlpha = 1.0;
   String _opacityTarget = "window"; // 默认值
   bool _sidebarIsExtended = true;
-  
 
   SharedPreferences? _prefs;
 
@@ -26,7 +26,6 @@ class AppThemeProvider extends ChangeNotifier {
   double get seedAlpha => _seedAlpha;
   String get opacityTarget => _opacityTarget;
   bool get sidebarIsExtended => _sidebarIsExtended;
-  
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -50,6 +49,7 @@ class AppThemeProvider extends ChangeNotifier {
     if (savedOpacityTarget != null) {
       _opacityTarget = savedOpacityTarget;
     }
+    _updateWindowEffect();
     notifyListeners();
   }
 
@@ -57,7 +57,23 @@ class AppThemeProvider extends ChangeNotifier {
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     await _prefs?.setInt(_themeKey, mode.index);
+    _updateWindowEffect();
     notifyListeners();
+  }
+
+  void _updateWindowEffect() {
+    final isDark =
+        PlatformDispatcher.instance.platformBrightness == Brightness.dark;
+    if (isDark) {
+      if (PlatformUtils.isMacOS) {
+        Window.setEffect(effect: WindowEffect.hudWindow, dark: isDark);
+        Window.setBlurViewState(MacOSBlurViewState.active);
+      }
+      if (PlatformUtils.isWindows) {
+        Window.setEffect(effect: WindowEffect.acrylic, dark: isDark);
+        Window.setBlurViewState(MacOSBlurViewState.active);
+      }
+    }
   }
 
   Future<void> setSeedColor(Color color) async {
@@ -110,14 +126,13 @@ class AppThemeProvider extends ChangeNotifier {
   }
 
   ThemeData buildLightTheme() {
-    
     return ThemeData(
       popupMenuTheme: PopupMenuThemeData(
         color: Color(0xffe0e0e0),
         shadowColor: Color(0xffe0e0e0),
         position: PopupMenuPosition.under,
       ),
-      dialogTheme: DialogThemeData(backgroundColor: lightBg),
+      dialogTheme: DialogThemeData(backgroundColor: ThemeUtils.lightBg),
       fontFamily: PlatformUtils.getFontFamily(),
       brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(
@@ -142,7 +157,7 @@ class AppThemeProvider extends ChangeNotifier {
         shadowColor: Color(0xff2f2f2f),
         position: PopupMenuPosition.under,
       ),
-      dialogTheme: DialogThemeData(backgroundColor: darkBg),
+      dialogTheme: DialogThemeData(backgroundColor: ThemeUtils.darkBg),
       fontFamily: PlatformUtils.getFontFamily(),
       brightness: Brightness.dark,
       colorScheme: ColorScheme.fromSeed(

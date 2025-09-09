@@ -57,6 +57,7 @@ class SettingsPageState extends State<SettingsPage> with ShowAwarePage {
                   const SizedBox(height: 18),
                   _buildSectionHeader('其他设置'),
                   _buildOtherSettingsCard(),
+                  SizedBox(height: 88,)
                 ],
               ),
             ),

@@ -31,20 +31,16 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    
+
     return Consumer<AppThemeProvider>(
       builder: (context, themeProvider, child) {
-        final defaultTextColor = ThemeUtils.select(context, light: Colors.black, dark: Colors.white);
-        Color sidebarBg = ThemeUtils.select(
+        final defaultTextColor = ThemeUtils.select(
           context,
-          light: themeProvider.lightBg,
-          dark: themeProvider.darkBg,
+          light: Colors.black,
+          dark: Colors.white,
         );
-        Color bodyBg = ThemeUtils.select(
-          context,
-          light: themeProvider.lightBg,
-          dark: themeProvider.darkBg,
-        );
+        Color sidebarBg = ThemeUtils.backgroundColor(context);
+        Color bodyBg = ThemeUtils.backgroundColor(context);
         if (["window", "sidebar"].contains(themeProvider.opacityTarget)) {
           sidebarBg = sidebarBg.withAlpha(
             (255 * themeProvider.seedAlpha).round(),
@@ -120,10 +116,10 @@ class _HomePageState extends State<HomePage> {
                               Color textColor;
 
                               if (isSelected) {
-                                bgColor = primary.withOpacity(0.2);
+                                bgColor = primary.withValues(alpha: 0.2);
                                 textColor = primary;
                               } else if (isHovered) {
-                                bgColor = Colors.grey.withOpacity(0.2);
+                                bgColor = Colors.grey.withValues(alpha: 0.2);
                                 textColor = defaultTextColor;
                               } else {
                                 bgColor = Colors.transparent;
@@ -224,26 +220,37 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: Stack(
                   children: [
-                    Container(color: bodyBg),
-                    // Library 视图延伸到底部
-                    Positioned.fill(
-                      child: ValueListenableBuilder<PlayerPage>(
-                        valueListenable: menuManager.currentPage,
-                        builder: (context, currentPage, _) {
-                          return IndexedStack(
+                    ValueListenableBuilder<PlayerPage>(
+                      valueListenable: menuManager.currentPage,
+                      builder: (context, currentPage, _) {
+                        return Container(
+                          color: bodyBg,
+                          child: IndexedStack(
                             index: currentPage.index,
                             children: menuManager.pages,
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
-
-                    // 悬浮 MiniPlayer
+                    // MiniPlayer 悬浮在上方
                     Positioned(
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      child: const MiniPlayer(),
+                      child: ClipRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            height: 88,
+                            decoration: BoxDecoration(
+                              color: ThemeUtils.backgroundColor(
+                                context,
+                              ).withValues(alpha: 0.2),
+                            ),
+                            child: const MiniPlayer(),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -254,4 +261,55 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+}
+
+class BlurWrapper extends StatelessWidget {
+  final Widget child;
+  final double sigma;
+  final Color overlayColor;
+
+  const BlurWrapper({
+    super.key,
+    required this.child,
+    this.sigma = 10,
+    this.overlayColor = const Color(0x33000000),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _BlurPainter(sigma: sigma, overlayColor: overlayColor),
+      child: child,
+    );
+  }
+}
+
+class _BlurPainter extends CustomPainter {
+  final double sigma;
+  final Color overlayColor;
+
+  _BlurPainter({required this.sigma, required this.overlayColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+
+    // 开一个离屏缓冲区
+    canvas.saveLayer(rect, Paint());
+
+    // 背景模糊
+    final blurPaint = Paint()
+      ..imageFilter = ImageFilter.blur(sigmaX: sigma, sigmaY: sigma);
+    canvas.saveLayer(rect, blurPaint);
+
+    // 叠一层半透明色（类似毛玻璃颜色）
+    canvas.drawRect(rect, Paint()..color = overlayColor);
+
+    // 合并回主画布
+    canvas.restore();
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

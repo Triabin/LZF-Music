@@ -17,6 +17,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    if (PlatformUtils.isDesktop) {
+      await DesktopManager.initialize();
+    } else if (PlatformUtils.isMobile) {
+      await MobileManager.initialize();
+    }
+
     MediaKit.ensureInitialized();
 
     final themeProvider = AppThemeProvider();
@@ -25,12 +31,6 @@ void main() async {
     final musicDatabase = MusicDatabase();
 
     await AudioPlayerService.init();
-
-    if (PlatformUtils.isDesktop) {
-      await DesktopManager.initialize();
-    } else if (PlatformUtils.isMobile) {
-      await MobileManager.initialize();
-    }
 
     runApp(
       MultiProvider(

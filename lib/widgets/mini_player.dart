@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:lzf_music/utils/theme_utils.dart';
 import 'package:provider/provider.dart';
 import '../views/now_playing_screen.dart';
 import '../services/player_provider.dart';
@@ -19,10 +20,13 @@ class _MiniPlayerState extends State<MiniPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    final activeColor = (isDarkMode ? Colors.white : Colors.black87);
-    final inactiveColor = (isDarkMode ? Colors.white30 : Colors.black26);
+    final activeColor = ThemeUtils.select(context,light: Colors.black87,
+      dark: Colors.white,
+    );
+    final inactiveColor = ThemeUtils.select(context,light: Colors.black26,
+      dark: Colors.white30,
+    );
 
     return Consumer<PlayerProvider>(
       builder: (context, playerProvider, child) {
@@ -30,371 +34,319 @@ class _MiniPlayerState extends State<MiniPlayer> {
         final position = playerProvider.position;
         final duration = playerProvider.duration;
 
-        return ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: isDarkMode 
-                    ? Colors.black.withOpacity(0.3)
-                    : Colors.white.withOpacity(0.7),
-                border: Border.all(
-                  color: isDarkMode 
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.black.withOpacity(0.1),
-                  width: 0.5,
+        return Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10.0,
+                  horizontal: 10.0,
                 ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-            // 主控制栏
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 10.0,
-                horizontal: 10.0,
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 4),
-                  // 歌曲封面
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        if (currentSong == null) return;
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ImprovedNowPlayingScreen(),
-                            fullscreenDialog: true,
+                child: Row(
+                  children: [
+                    const SizedBox(width: 4),
+                    // 歌曲封面
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () {
+                          if (currentSong == null) return;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ImprovedNowPlayingScreen(),
+                              fullscreenDialog: true,
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6),
+                            image: currentSong?.albumArtPath != null
+                                ? DecorationImage(
+                                    image: FileImage(
+                                      File(currentSong!.albumArtPath!),
+                                    ),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
                           ),
-                        );
-                      },
-                      child: Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(6),
-                          image: currentSong?.albumArtPath != null
-                              ? DecorationImage(
-                                  image: FileImage(
-                                    File(currentSong!.albumArtPath!),
-                                  ),
-                                  fit: BoxFit.cover,
-                                )
+                          child: currentSong?.albumArtPath == null
+                              ? const Icon(Icons.music_note_rounded, size: 24)
                               : null,
                         ),
-                        child: currentSong?.albumArtPath == null
-                            ? const Icon(Icons.music_note_rounded, size: 24)
-                            : null,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  // 歌曲信息
-                  SizedBox(
-                    width: 260, // 固定宽度
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          currentSong?.title ?? '未播放',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                currentSong?.artist ?? '选择歌曲开始播放',
-                                style: TextStyle(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                  fontSize: 14,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                    const SizedBox(width: 12),
+                    // 歌曲信息
+                    SizedBox(
+                      width: 260, // 固定宽度
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            currentSong?.title ?? '未播放',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
                             ),
-                            SizedBox(
-                              width: 92,
-                              child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "${_formatDuration(position)}/${_formatDuration(duration)}",
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  currentSong?.artist ?? '选择歌曲开始播放',
                                   style: TextStyle(
-                                    fontSize: 14,
                                     color: Theme.of(
                                       context,
                                     ).colorScheme.onSurface,
+                                    fontSize: 14,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ],
-                            ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            // 进度条
-                            Expanded(
-                              child: AnimatedTrackHeightSlider(
-                                trackHeight: 4,
-                                value:
-                                    (_tempSliderValue >= 0
-                                            ? _tempSliderValue
-                                            : (duration.inMilliseconds > 0
-                                                  ? position.inMilliseconds /
-                                                        duration.inMilliseconds
-                                                  : 0.0))
-                                        .clamp(0.0, 1.0),
-                                min: 0.0,
-                                max: 1.0,
-                                onChanged: currentSong != null
-                                    ? (value) {
-                                        setState(() {
-                                          _tempSliderValue = value; // 暂存比例
-                                        });
-                                      }
-                                    : null,
-                                onChangeEnd: currentSong != null
-                                    ? (value) async {
-                                        final newPosition = Duration(
-                                          milliseconds:
-                                              (_tempSliderValue *
-                                                      duration.inMilliseconds)
-                                                  .round(),
-                                        );
-                                        await playerProvider.seekTo(
-                                          newPosition,
-                                        );
-                                        setState(() {
-                                          _tempSliderValue =
-                                              -1; // 复位，用实时 position 控制
-                                        });
-                                      }
-                                    : null,
                               ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 6,)
-                      ],
-                    ),
-                  ),
-
-                  Spacer(), // 右侧弹性空白
-                  
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          playerProvider.volume <= 0
-                              ? Icons.volume_off_rounded
-                              : Icons.volume_up_rounded,
-                          size: 20,
-                        ),
-                        onPressed: currentSong != null
-                            ? () {
-                                if (playerProvider.volume > 0) {
-                                  playerProvider.setVolume(0);
-                                } else {
-                                  playerProvider.setVolume(1);
-                                }
-                              }
-                            : null,
+                              SizedBox(
+                                width: 92,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      "${_formatDuration(position)}/${_formatDuration(duration)}",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              // 进度条
+                              Expanded(
+                                child: AnimatedTrackHeightSlider(
+                                  trackHeight: 4,
+                                  value:
+                                      (_tempSliderValue >= 0
+                                              ? _tempSliderValue
+                                              : (duration.inMilliseconds > 0
+                                                    ? position.inMilliseconds /
+                                                          duration
+                                                              .inMilliseconds
+                                                    : 0.0))
+                                          .clamp(0.0, 1.0),
+                                  min: 0.0,
+                                  max: 1.0,
+                                  onChanged: currentSong != null
+                                      ? (value) {
+                                          setState(() {
+                                            _tempSliderValue = value; // 暂存比例
+                                          });
+                                        }
+                                      : null,
+                                  onChangeEnd: currentSong != null
+                                      ? (value) async {
+                                          final newPosition = Duration(
+                                            milliseconds:
+                                                (_tempSliderValue *
+                                                        duration.inMilliseconds)
+                                                    .round(),
+                                          );
+                                          await playerProvider.seekTo(
+                                            newPosition,
+                                          );
+                                          setState(() {
+                                            _tempSliderValue =
+                                                -1; // 复位，用实时 position 控制
+                                          });
+                                        }
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 6),
+                        ],
                       ),
-                      SizedBox(
-                        width: 100,
-                        child: AnimatedTrackHeightSlider(
-                          trackHeight: 4,
-                          value: playerProvider.volume,
-                          min: 0.0,
-                          max: 1.0,
-                          onChanged: currentSong != null
-                              ? (value) {
-                                  playerProvider.setVolume(value);
+                    ),
+
+                    Spacer(), // 右侧弹性空白
+
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            playerProvider.volume <= 0
+                                ? Icons.volume_off_rounded
+                                : Icons.volume_up_rounded,
+                            size: 20,
+                          ),
+                          onPressed: currentSong != null
+                              ? () {
+                                  if (playerProvider.volume > 0) {
+                                    playerProvider.setVolume(0);
+                                  } else {
+                                    playerProvider.setVolume(1);
+                                  }
                                 }
                               : null,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 20),
-                  IconButton(
-                    iconSize: 20,
-                    icon: Icon(
-                      Icons.shuffle_rounded,
-                      color: playerProvider.playMode == PlayMode.shuffle
-                          ? activeColor
-                          : inactiveColor,
-                    ),
-                    onPressed: () {
-                      if (playerProvider.playMode == PlayMode.shuffle) {
-                        playerProvider.setPlayMode(PlayMode.sequence);
-                        return;
-                      }
-                      playerProvider.setPlayMode(PlayMode.shuffle);
-                    },
-                  ),
-                  IconButton(
-                    iconSize: 20,
-                    icon: Icon(
-                      playerProvider.playMode == PlayMode.singleLoop
-                          ? Icons.repeat_one_rounded
-                          : Icons.repeat_rounded,
-                      color:
-                          playerProvider.playMode == PlayMode.loop ||
-                              playerProvider.playMode == PlayMode.singleLoop
-                          ? activeColor
-                          : inactiveColor,
-                    ),
-                    onPressed: () {
-                      if (playerProvider.playMode == PlayMode.singleLoop) {
-                        playerProvider.setPlayMode(PlayMode.sequence);
-                        return;
-                      }
-                      playerProvider.setPlayMode(
-                        playerProvider.playMode == PlayMode.loop
-                            ? PlayMode.singleLoop
-                            : PlayMode.loop,
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 10),
-                  // 控制按钮
-                  Row(
-                    children: [
-                      // 上一首按钮
-                      IconButton(
-                        color: activeColor,
-                        icon: Icon(Icons.skip_previous_rounded, size: 40),
-                        onPressed:
-                            (playerProvider.playMode == PlayMode.sequence &&
-                                !playerProvider.hasPrevious)
-                            ? null
-                            : () async {
-                                try {
-                                  await playerProvider.previous();
-                                } catch (e) {
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('播放失败: $e')),
-                                    );
-                                  }
-                                }
-                              },
-                      ),
-                      // 播放/暂停按钮
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          IconButton(
-                            color: activeColor,
-                            icon: Icon(
-                              playerProvider.isPlaying
-                                  ? Icons.pause_rounded
-                                  : Icons.play_arrow_rounded,
-                              size: 40,
-                            ),
-                            onPressed: currentSong != null
-                                ? () async {
-                                    try {
-                                      await playerProvider.togglePlay();
-                                    } catch (e) {
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(content: Text('操作失败: $e')),
-                                        );
-                                      }
-                                    }
+                        SizedBox(
+                          width: 100,
+                          child: AnimatedTrackHeightSlider(
+                            trackHeight: 4,
+                            value: playerProvider.volume,
+                            min: 0.0,
+                            max: 1.0,
+                            onChanged: currentSong != null
+                                ? (value) {
+                                    playerProvider.setVolume(value);
                                   }
                                 : null,
                           ),
-                          // 加载指示器
-                          if (playerProvider.isLoading)
-                            const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                        ],
-                      ),
-                      // 下一首按钮
-                      IconButton(
-                        color: activeColor,
-                        icon: Icon(Icons.skip_next_rounded, size: 40),
-                        onPressed:
-                            (playerProvider.playMode == PlayMode.sequence &&
-                                !playerProvider.hasNext)
-                            ? null
-                            : () async {
-                                try {
-                                  await playerProvider.next();
-                                } catch (e) {
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('播放失败: $e')),
-                                    );
-                                  }
-                                }
-                              },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // 错误信息显示
-            if (playerProvider.errorMessage != null)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                color: Theme.of(context).colorScheme.errorContainer,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.error_outline_rounded,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.onErrorContainer,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        playerProvider.errorMessage!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onErrorContainer,
                         ),
-                      ),
+                      ],
                     ),
-                    TextButton(
+                    const SizedBox(width: 20),
+                    IconButton(
+                      iconSize: 20,
+                      icon: Icon(
+                        Icons.shuffle_rounded,
+                        color: playerProvider.playMode == PlayMode.shuffle
+                            ? activeColor
+                            : inactiveColor,
+                      ),
                       onPressed: () {
-                        playerProvider.clearError();
+                        if (playerProvider.playMode == PlayMode.shuffle) {
+                          playerProvider.setPlayMode(PlayMode.sequence);
+                          return;
+                        }
+                        playerProvider.setPlayMode(PlayMode.shuffle);
                       },
-                      child: const Text('关闭', style: TextStyle(fontSize: 12)),
+                    ),
+                    IconButton(
+                      iconSize: 20,
+                      icon: Icon(
+                        playerProvider.playMode == PlayMode.singleLoop
+                            ? Icons.repeat_one_rounded
+                            : Icons.repeat_rounded,
+                        color:
+                            playerProvider.playMode == PlayMode.loop ||
+                                playerProvider.playMode == PlayMode.singleLoop
+                            ? activeColor
+                            : inactiveColor,
+                      ),
+                      onPressed: () {
+                        if (playerProvider.playMode == PlayMode.singleLoop) {
+                          playerProvider.setPlayMode(PlayMode.sequence);
+                          return;
+                        }
+                        playerProvider.setPlayMode(
+                          playerProvider.playMode == PlayMode.loop
+                              ? PlayMode.singleLoop
+                              : PlayMode.loop,
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    // 控制按钮
+                    Row(
+                      children: [
+                        // 上一首按钮
+                        IconButton(
+                          color: activeColor,
+                          icon: Icon(Icons.skip_previous_rounded, size: 40),
+                          onPressed:
+                              (playerProvider.playMode == PlayMode.sequence &&
+                                  !playerProvider.hasPrevious)
+                              ? null
+                              : () async {
+                                  try {
+                                    await playerProvider.previous();
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text('播放失败: $e')),
+                                      );
+                                    }
+                                  }
+                                },
+                        ),
+                        // 播放/暂停按钮
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            IconButton(
+                              color: activeColor,
+                              icon: Icon(
+                                playerProvider.isPlaying
+                                    ? Icons.pause_rounded
+                                    : Icons.play_arrow_rounded,
+                                size: 40,
+                              ),
+                              onPressed: currentSong != null
+                                  ? () async {
+                                      try {
+                                        await playerProvider.togglePlay();
+                                      } catch (e) {
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(content: Text('操作失败: $e')),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  : null,
+                            ),
+                            // 加载指示器
+                            if (playerProvider.isLoading)
+                              const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                          ],
+                        ),
+                        // 下一首按钮
+                        IconButton(
+                          color: activeColor,
+                          icon: Icon(Icons.skip_next_rounded, size: 40),
+                          onPressed:
+                              (playerProvider.playMode == PlayMode.sequence &&
+                                  !playerProvider.hasNext)
+                              ? null
+                              : () async {
+                                  try {
+                                    await playerProvider.next();
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text('播放失败: $e')),
+                                      );
+                                    }
+                                  }
+                                },
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-                ],
-              ),
-            ),
-          ),
-        );
+              );
       },
     );
   }
