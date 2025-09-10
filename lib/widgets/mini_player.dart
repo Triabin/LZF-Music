@@ -27,10 +27,10 @@ class _MiniPlayerState extends State<MiniPlayer> {
   Widget build(BuildContext context) {
     // 根据容器宽度决定显示哪些控件
     final showVolumeControl = widget.containerWidth > 765;
-    final showProgressControl = widget.containerWidth > 600;
+    final showProgressControl = widget.containerWidth > 660;
     double progressLength = (widget.containerWidth - 520).clamp(254, 312);
     if (!showProgressControl) {
-      progressLength = widget.containerWidth - 348;
+      progressLength = widget.containerWidth - 268;
     }
     final activeColor = ThemeUtils.select(
       context,
@@ -50,9 +50,9 @@ class _MiniPlayerState extends State<MiniPlayer> {
         final duration = playerProvider.duration;
 
         return Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: 10.0,
-            horizontal: 10.0,
+          padding: EdgeInsets.symmetric(
+            vertical: showVolumeControl ? 10.0 : 5.0,
+            horizontal: showVolumeControl ? 10.0 : 5.0,
           ),
           child: Row(
                 children: [
@@ -99,27 +99,31 @@ class _MiniPlayerState extends State<MiniPlayer> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          currentSong?.title ?? '未播放',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Text(
+                            currentSong?.title ?? '未播放',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Expanded(
-                              child: Text(
-                                currentSong?.artist ?? '选择歌曲开始播放',
-                                style: TextStyle(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                  fontSize: 14,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Text(
+                                  currentSong?.artist ?? '选择歌曲开始播放',
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
+                                    fontSize: 14,
+                                  ),
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             if (showProgressControl)
@@ -235,47 +239,51 @@ class _MiniPlayerState extends State<MiniPlayer> {
                     ),
                     const SizedBox(width: 20),
                   ],
-                  IconButton(
-                    iconSize: 20,
-                    icon: Icon(
-                      Icons.shuffle_rounded,
-                      color: playerProvider.playMode == PlayMode.shuffle
-                          ? activeColor
-                          : inactiveColor,
+                  // 播放模式按钮 - 只在显示进度条时显示
+                  if (showProgressControl) ...[
+                    IconButton(
+                      iconSize: 20,
+                      icon: Icon(
+                        Icons.shuffle_rounded,
+                        color: playerProvider.playMode == PlayMode.shuffle
+                            ? activeColor
+                            : inactiveColor,
+                      ),
+                      onPressed: () {
+                        if (playerProvider.playMode == PlayMode.shuffle) {
+                          playerProvider.setPlayMode(PlayMode.sequence);
+                          return;
+                        }
+                        playerProvider.setPlayMode(PlayMode.shuffle);
+                      },
                     ),
-                    onPressed: () {
-                      if (playerProvider.playMode == PlayMode.shuffle) {
-                        playerProvider.setPlayMode(PlayMode.sequence);
-                        return;
-                      }
-                      playerProvider.setPlayMode(PlayMode.shuffle);
-                    },
-                  ),
-                  IconButton(
-                    iconSize: 20,
-                    icon: Icon(
-                      playerProvider.playMode == PlayMode.singleLoop
-                          ? Icons.repeat_one_rounded
-                          : Icons.repeat_rounded,
-                      color:
-                          playerProvider.playMode == PlayMode.loop ||
-                              playerProvider.playMode == PlayMode.singleLoop
-                          ? activeColor
-                          : inactiveColor,
+                    IconButton(
+                      iconSize: 20,
+                      icon: Icon(
+                        playerProvider.playMode == PlayMode.singleLoop
+                            ? Icons.repeat_one_rounded
+                            : Icons.repeat_rounded,
+                        color:
+                            playerProvider.playMode == PlayMode.loop ||
+                                playerProvider.playMode == PlayMode.singleLoop
+                            ? activeColor
+                            : inactiveColor,
+                      ),
+                      onPressed: () {
+                        if (playerProvider.playMode == PlayMode.singleLoop) {
+                          playerProvider.setPlayMode(PlayMode.sequence);
+                          return;
+                        }
+                        playerProvider.setPlayMode(
+                          playerProvider.playMode == PlayMode.loop
+                              ? PlayMode.singleLoop
+                              : PlayMode.loop,
+                        );
+                      },
                     ),
-                    onPressed: () {
-                      if (playerProvider.playMode == PlayMode.singleLoop) {
-                        playerProvider.setPlayMode(PlayMode.sequence);
-                        return;
-                      }
-                      playerProvider.setPlayMode(
-                        playerProvider.playMode == PlayMode.loop
-                            ? PlayMode.singleLoop
-                            : PlayMode.loop,
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 10),
+                    const SizedBox(width: 10),
+                  ],
+                  
                   // 控制按钮
                   Row(
                     children: [
