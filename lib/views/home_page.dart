@@ -268,24 +268,32 @@ class _HomePageState extends State<HomePage> {
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      child: isMiniPlayerFloating
-                          ? ClipRect(
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(
-                                  sigmaX: 10,
-                                  sigmaY: 10,
-                                ),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: ThemeUtils.backgroundColor(
-                                      context,
-                                    ).withValues(alpha: 0.6),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return isMiniPlayerFloating
+                              ? ClipRect(
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(
+                                      sigmaX: 10,
+                                      sigmaY: 10,
+                                    ),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: ThemeUtils.backgroundColor(
+                                          context,
+                                        ).withValues(alpha: 0.6),
+                                      ),
+                                      child: MiniPlayer(
+                                        containerWidth: constraints.maxWidth,
+                                      ),
+                                    ),
                                   ),
-                                  child: const MiniPlayer(),
-                                ),
-                              ),
-                            )
-                          : const MiniPlayer(),
+                                )
+                              : MiniPlayer(
+                                  containerWidth: constraints.maxWidth,
+                                );
+                        },
+                      ),
                     ),
                   ],
                 ),
