@@ -20,7 +20,7 @@ class DesktopManager {
 
       const WindowOptions windowOptions = WindowOptions(
         size: Size(1080, 720),
-        minimumSize: Size(1050, 720),
+        minimumSize: Size(760, 720),
         center: true,
         backgroundColor: Colors.transparent,
         skipTaskbar: false,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lzf_music/utils/theme_utils.dart';
 import '../widgets/mini_player.dart';
+import '../widgets/resolution_display.dart';
 import 'package:provider/provider.dart';
 import '../../services/theme_provider.dart';
 import '../contants/app_contants.dart' show PlayerPage;
@@ -261,6 +262,15 @@ class _HomePageState extends State<HomePage> {
                                 },
                               ),
                             ),
+                    ),
+
+                    // 逻辑分辨率显示
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: ResolutionDisplay(
+                        isMinimized: true,
+                      ),
                     ),
 
                     // MiniPlayer

@@ -149,19 +149,26 @@ class _MusicListViewState extends State<MusicListView> {
           final isHovered = !_isScrolling && _hoveredIndex == index;
           final isSelected = widget.playerProvider.currentSong?.id == song.id;
           
-          return Card(
-            elevation: 0,
-            margin: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
-            ),
-            color: isSelected
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                : isHovered
-                ? Colors.grey.withOpacity(0.1)
-                : Colors.transparent,
-            child: Row(
-              children: [
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final containerWidth = constraints.maxWidth;
+              final showSampleAndBitrate = containerWidth > 900;
+              final showDuration = containerWidth > 700;
+              final showAlbum = containerWidth > 500;
+              
+              return Card(
+                elevation: 0,
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                    : isHovered
+                    ? Colors.grey.withOpacity(0.1)
+                    : Colors.transparent,
+                child: Row(
+                  children: [
                 // 主要内容区域
                 Expanded(
                   child: MouseRegion(
@@ -232,25 +239,27 @@ class _MusicListViewState extends State<MusicListView> {
                                     ),
                                   ),
                                   // 专辑
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      song.album ?? '未知专辑',
-                                      style: TextStyle(
-                                        color: isSelected
-                                            ? Theme.of(context).colorScheme.primary
-                                            : Theme.of(context).colorScheme.onSurface,
+                                  if (showAlbum)
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        song.album ?? '未知专辑',
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Theme.of(context).colorScheme.primary
+                                              : Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
                                   // 采样率
-                                  SizedBox(
-                                    width: 70,
-                                    child: Text(
-                                      song.sampleRate != null
-                                          ? '${(song.sampleRate! / 1000).toStringAsFixed(1)} kHz'
-                                          : '',
+                                  if (showSampleAndBitrate)
+                                    SizedBox(
+                                      width: 70,
+                                      child: Text(
+                                        song.sampleRate != null
+                                            ? '${(song.sampleRate! / 1000).toStringAsFixed(1)} kHz'
+                                            : '',
                                       style: TextStyle(
                                         color: isSelected
                                             ? Theme.of(context).colorScheme.primary
@@ -260,33 +269,35 @@ class _MusicListViewState extends State<MusicListView> {
                                     ),
                                   ),
                                   // 比特率
-                                  SizedBox(
-                                    width: 80,
-                                    child: Text(
-                                      song.bitrate != null
-                                          ? '${(song.bitrate! / 1000).toStringAsFixed(0)} kbps'
-                                          : '',
-                                      style: TextStyle(
-                                        color: isSelected
-                                            ? Theme.of(context).colorScheme.primary
-                                            : Theme.of(context).colorScheme.onSurface,
+                                  if (showSampleAndBitrate)
+                                    SizedBox(
+                                      width: 80,
+                                      child: Text(
+                                        song.bitrate != null
+                                            ? '${(song.bitrate! / 1000).toStringAsFixed(0)} kbps'
+                                            : '',
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Theme.of(context).colorScheme.primary
+                                              : Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
                                   // 时长
-                                  SizedBox(
-                                    width: 60,
-                                    child: Text(
-                                      _formatDuration(song.duration ?? 0),
-                                      style: TextStyle(
-                                        color: isSelected
-                                            ? Theme.of(context).colorScheme.primary
-                                            : Theme.of(context).colorScheme.onSurface,
+                                  if (showDuration)
+                                    SizedBox(
+                                      width: 60,
+                                      child: Text(
+                                        _formatDuration(song.duration ?? 0),
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Theme.of(context).colorScheme.primary
+                                              : Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
                                 ],
                               ),
                             ),
@@ -325,8 +336,10 @@ class _MusicListViewState extends State<MusicListView> {
                         onDelete: () => _handleSongDelete(index),
                         onFavoriteToggle: () => _handleFavoriteToggle(index),
                       ),
-              ],
-            ),
+                  ],
+                ),
+              );
+            },
           );
         },
       ),
