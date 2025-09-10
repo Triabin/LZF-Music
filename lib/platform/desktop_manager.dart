@@ -5,6 +5,8 @@ import 'package:window_manager/window_manager.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:tray_manager/tray_manager.dart';
 import '../utils/theme_utils.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart';
+import 'dart:ui';
 
 class DesktopManager {
   static State? _currentState;
@@ -14,6 +16,7 @@ class DesktopManager {
 
     try {
       await windowManager.ensureInitialized();
+      await Window.initialize();
 
       const WindowOptions windowOptions = WindowOptions(
         size: Size(1080, 720),
@@ -30,7 +33,16 @@ class DesktopManager {
         await windowManager.show();
         await windowManager.focus();
 
-    await windowManager.setBackgroundColor(Colors.transparent);
+        await windowManager.setBackgroundColor(Colors.transparent);
+        if (Platform.isMacOS) {
+          await Window.setEffect(
+            effect: WindowEffect.hudWindow,
+            dark:
+                PlatformDispatcher.instance.platformBrightness ==
+                Brightness.dark,
+          );
+          Window.setBlurViewState(MacOSBlurViewState.active);
+        }
       });
 
       await _initTray();
@@ -38,7 +50,6 @@ class DesktopManager {
       debugPrint('桌面端初始化失败: $e');
     }
   }
-
 
   static Future<void> postInitialize() async {
     if (!PlatformUtils.isDesktop) return;
@@ -51,6 +62,14 @@ class DesktopManager {
           win.size = const Size(1080, 720);
           win.alignment = Alignment.center;
           win.show();
+          if (Platform.isWindows) {
+            Window.setEffect(
+              effect: WindowEffect.mica,
+              dark:
+                  PlatformDispatcher.instance.platformBrightness ==
+                  Brightness.dark,
+            );
+          }
         });
       }
     } catch (e) {
@@ -60,7 +79,7 @@ class DesktopManager {
 
   static void initializeListeners(State state) {
     if (!PlatformUtils.isDesktop) return;
-    
+
     _currentState = state;
     if (state is WindowListener) {
       windowManager.addListener(state as WindowListener);
@@ -105,9 +124,9 @@ class DesktopManager {
 
     try {
       await trayManager.setIcon(
-        Platform.isWindows 
-          ? 'assets/windows/icons/tray_icon.ico'
-          : 'assets/icons/tray_icon.png'
+        Platform.isWindows
+            ? 'assets/windows/icons/tray_icon.ico'
+            : 'assets/icons/tray_icon.png',
       );
     } catch (e) {
       debugPrint('系统托盘初始化失败: $e');
@@ -160,7 +179,6 @@ class DesktopManager {
     if (!PlatformUtils.isDesktop) return;
 
     try {
-      
       if (await windowManager.isPreventClose()) {
         await windowManager.hide();
       } else {
@@ -221,15 +239,39 @@ class CustomTitleBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final buttonColors = WindowButtonColors(
-      iconNormal: ThemeUtils.isDark(context) ? Colors.white70 : Colors.black54,
-      mouseOver: ThemeUtils.isDark(context) ? Colors.grey.shade700 : Colors.grey.shade300,
-      mouseDown: ThemeUtils.isDark(context) ? Colors.grey.shade800 : Colors.grey.shade400,
-      iconMouseOver: ThemeUtils.isDark(context) ? Colors.white : Colors.black,
-      iconMouseDown: ThemeUtils.isDark(context) ? Colors.white : Colors.black,
+      iconNormal: ThemeUtils.select(
+        context,
+        light: Colors.black54,
+        dark: Colors.white70,
+      ),
+      mouseOver: ThemeUtils.select(
+        context,
+        light: Colors.grey.shade300,
+        dark: Colors.grey.shade700,
+      ),
+      mouseDown: ThemeUtils.select(
+        context,
+        light: Colors.grey.shade400,
+        dark: Colors.grey.shade800,
+      ),
+      iconMouseOver: ThemeUtils.select(
+        context,
+        light: Colors.black,
+        dark: Colors.white,
+      ),
+      iconMouseDown: ThemeUtils.select(
+        context,
+        light: Colors.black,
+        dark: Colors.white,
+      ),
     );
 
     final closeButtonColors = WindowButtonColors(
-      iconNormal: ThemeUtils.isDark(context) ? Colors.white70 : Colors.black54,
+      iconNormal: ThemeUtils.select(
+        context,
+        light: Colors.black54,
+        dark: Colors.white70,
+      ),
       mouseOver: Colors.red.shade700,
       mouseDown: Colors.red.shade900,
       iconMouseOver: Colors.white,
@@ -272,7 +314,8 @@ class CustomTitleBar extends StatelessWidget {
   }
 }
 
-mixin DesktopWindowMixin<T extends StatefulWidget> on State<T> implements WindowListener, TrayListener{
+mixin DesktopWindowMixin<T extends StatefulWidget> on State<T>
+    implements WindowListener, TrayListener {
   @override
   void onWindowClose() => DesktopManager.handleWindowClose();
 
@@ -288,23 +331,39 @@ mixin DesktopWindowMixin<T extends StatefulWidget> on State<T> implements Window
   }
 
   @override
-  void onTrayMenuItemClick(MenuItem menuItem) => 
+  void onTrayMenuItemClick(MenuItem menuItem) =>
       DesktopManager.handleTrayMenuClick(menuItem);
 
-  @override void onWindowFocus() {}
-  @override void onWindowBlur() {}
-  @override void onWindowMaximize() {}
-  @override void onWindowUnmaximize() {}
-  @override void onWindowMinimize() {}
-  @override void onWindowRestore() {}
-  @override void onWindowResize() {}
-  @override void onWindowResized() {}
-  @override void onWindowMove() {}
-  @override void onWindowMoved() {}
-  @override void onWindowEnterFullScreen() {}
-  @override void onWindowLeaveFullScreen() {}
-  @override void onWindowDocked() {}
-  @override void onWindowUndocked() {}
-  @override void onWindowEvent(String eventName) {}
-  @override void onTrayIconMouseUp() {}
+  @override
+  void onWindowFocus() {}
+  @override
+  void onWindowBlur() {}
+  @override
+  void onWindowMaximize() {}
+  @override
+  void onWindowUnmaximize() {}
+  @override
+  void onWindowMinimize() {}
+  @override
+  void onWindowRestore() {}
+  @override
+  void onWindowResize() {}
+  @override
+  void onWindowResized() {}
+  @override
+  void onWindowMove() {}
+  @override
+  void onWindowMoved() {}
+  @override
+  void onWindowEnterFullScreen() {}
+  @override
+  void onWindowLeaveFullScreen() {}
+  @override
+  void onWindowDocked() {}
+  @override
+  void onWindowUndocked() {}
+  @override
+  void onWindowEvent(String eventName) {}
+  @override
+  void onTrayIconMouseUp() {}
 }
