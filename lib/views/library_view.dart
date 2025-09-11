@@ -458,24 +458,26 @@ class _LibraryHeaderState extends State<LibraryHeader> {
             });
           },
         ),
-        TextButton.icon(
-          icon: const Icon(Icons.folder_open_rounded),
-          label: const Text('选择文件夹'),
-          onPressed: () async {
-            await widget.onImportDirectory();
-          },
-        ),
-        const SizedBox(width: 8),
-        TextButton.icon(
-          icon: const Icon(Icons.library_music_rounded),
-          label: const Text('选择音乐文件'),
-          onPressed: () async {
-            await widget.onImportFiles();
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('音乐文件导入完成')));
-          },
-        ),
+        if (MediaQuery.of(context).size.width > 560) ...[
+          TextButton.icon(
+            icon: const Icon(Icons.folder_open_rounded),
+            label: const Text('选择文件夹'),
+            onPressed: () async {
+              await widget.onImportDirectory();
+            },
+          ),
+          const SizedBox(width: 8),
+          TextButton.icon(
+            icon: const Icon(Icons.library_music_rounded),
+            label: const Text('选择音乐文件'),
+            onPressed: () async {
+              await widget.onImportFiles();
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('音乐文件导入完成')));
+            },
+          ),
+        ],
       ],
     );
   }
