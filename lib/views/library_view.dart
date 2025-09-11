@@ -175,8 +175,7 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
 
         return Stack(
           children: [
-            Expanded(
-              child: Padding(
+            Padding(
                 padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
                 child: MusicListView(
                   songs: songs,
@@ -211,7 +210,6 @@ class LibraryViewState extends State<LibraryView> with ShowAwarePage {
                   },
                 ),
               ),
-            ),
             Positioned(
               top: 0,
               left: 0,
