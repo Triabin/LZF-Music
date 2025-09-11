@@ -3,7 +3,7 @@ import 'package:lzf_music/services/audio_player_service.dart';
 import 'package:provider/provider.dart';
 import 'package:media_kit/media_kit.dart';
 
-import 'views/home_page.dart';
+import 'views/home_page_mobile.dart';
 import 'services/player_provider.dart';
 import 'database/database.dart';
 import './services/theme_provider.dart';
