@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/player_provider.dart';
 import 'package:lzf_music/widgets/lyrics_view.dart';
+import 'package:lzf_music/widgets/music_control_panel.dart';
 
 /// 移动端正在播放页面
 class MobileNowPlayingScreen extends StatefulWidget {
@@ -28,6 +29,9 @@ class _MobileNowPlayingScreenState extends State<MobileNowPlayingScreen> {
   // 拖动相关属性
   double _dragOffset = 0.0; // 拖动偏移量
   bool _isDragging = false; // 是否正在拖动
+  
+  // 进度条控制
+  double _tempSliderValue = -1; // -1 表示没在拖动
 
   @override
   void initState() {
@@ -129,10 +133,11 @@ class _MobileNowPlayingScreenState extends State<MobileNowPlayingScreen> {
                   SafeArea(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final totalHeight = constraints.maxHeight;
-                        final topSpaceHeight = totalHeight * 0.04; // 4%
-                        final songInfoHeight = totalHeight * 0.13; // 13%
-                        final lyricsHeight = totalHeight * 0.83; // 83%
+                        final topSpaceHeight = 18.0; // 4%
+                        final songInfoHeight = 75.0; // 13%
+                        final lyricsHeight = constraints.maxHeight - 213 - 12 - 75;
+                        final controlPanelHeight = 67.0; // 18%
+                        final controlButtonsHeight = 140.0; // 17%
 
                         return Column(
                           children: [
@@ -172,13 +177,55 @@ class _MobileNowPlayingScreenState extends State<MobileNowPlayingScreen> {
                               ),
                             ),
 
-                            // 剩余83%显示歌词
+                            // 剩余63%显示歌词
                             SizedBox(
                               height: lyricsHeight,
                               child: _buildLyricsSection(
                                 lyrics,
                                 currentLine,
                                 playerProvider,
+                              ),
+                            ),
+
+                            // 底部20%显示控制面板
+                            SizedBox(
+                              height: controlPanelHeight,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                child: SongInfoPanel(
+                                  currentSong: currentSong,
+                                  currentPosition: currentPosition,
+                                  totalDuration: totalDuration,
+                                  tempSliderValue: _tempSliderValue,
+                                  onSliderChanged: (value) {
+                                    setState(() {
+                                      _tempSliderValue = value;
+                                    });
+                                  },
+                                  onSliderChangeEnd: (value) {
+                                    setState(() {
+                                      _tempSliderValue = -1;
+                                    });
+                                    playerProvider.seekTo(
+                                      Duration(seconds: (value * totalDuration).round()),
+                                    );
+                                  },
+                                  playerProvider: playerProvider,
+                                  compactLayout: true,
+                                ),
+                              ),
+                            ),
+
+                            // 底部17%显示控制按钮
+                            SizedBox(
+                              height: controlButtonsHeight,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                                child: MusicControlButtons(
+                                  playerProvider: playerProvider,
+                                  isPlaying: isPlaying,
+                                  compactLayout: true,
+                                ),
                               ),
                             ),
                           ],
@@ -229,7 +276,7 @@ class _MobileNowPlayingScreenState extends State<MobileNowPlayingScreen> {
     bool isPlaying,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
           // 专辑封面

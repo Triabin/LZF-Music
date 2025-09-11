@@ -140,12 +140,14 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       child: MiniPlayer(
                                         containerWidth: constraints.maxWidth,
+                                        isMobile: true,
                                       ),
                                     ),
                                   ),
                                 )
                               : MiniPlayer(
                                   containerWidth: constraints.maxWidth,
+                                  isMobile: true,
                                 );
                         },
                       ),

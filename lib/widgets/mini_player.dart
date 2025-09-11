@@ -1,19 +1,21 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:lzf_music/utils/theme_utils.dart';
 import 'package:provider/provider.dart';
 import '../views/mobile_now_playing_screen.dart';
+import '../views/now_playing_screen.dart';
 import '../services/player_provider.dart';
 import './slider_custom.dart';
 import '../contants/app_contants.dart' show PlayMode;
 
 class MiniPlayer extends StatefulWidget {
   final double containerWidth;
+  final bool isMobile;
 
   const MiniPlayer({
     super.key,
     this.containerWidth = double.infinity,
+    this.isMobile = false,
   });
 
   @override
@@ -66,7 +68,9 @@ class _MiniPlayerState extends State<MiniPlayer> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MobileNowPlayingScreen(),
+                            builder: (context) => widget.isMobile 
+                                ? MobileNowPlayingScreen()
+                                : ImprovedNowPlayingScreen(),
                             fullscreenDialog: true,
                           ),
                         );
