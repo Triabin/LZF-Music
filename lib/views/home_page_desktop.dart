@@ -8,14 +8,14 @@ import '../contants/app_contants.dart' show PlayerPage;
 import '../router/router.dart';
 import 'dart:ui';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class HomePageDesktop extends StatefulWidget {
+  const HomePageDesktop({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePageDesktop> createState() => _HomePageDesktopState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageDesktopState extends State<HomePageDesktop> {
   final menuManager = MenuManager();
 
   @override
@@ -265,13 +265,13 @@ class _HomePageState extends State<HomePage> {
                     ),
 
                     // 逻辑分辨率显示
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: ResolutionDisplay(
-                        isMinimized: true,
-                      ),
-                    ),
+                    // Positioned(
+                    //   top: 8,
+                    //   right: 8,
+                    //   child: ResolutionDisplay(
+                    //     isMinimized: true,
+                    //   ),
+                    // ),
 
                     // MiniPlayer
                     Positioned(

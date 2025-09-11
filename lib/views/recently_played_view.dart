@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lzf_music/widgets/page_header.dart';
 import 'dart:async';
 import '../database/database.dart';
 import '../services/music_import_service.dart';
@@ -95,7 +96,9 @@ class RecentlyPlayedViewState extends State<RecentlyPlayedView>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              LibraryHeader(
+              PageHeader(
+                showImport: false,
+                showSearch: false,
                 songs: songs,
                 onSearch: (keyword) async {
                   searchKeyword = keyword;
@@ -148,94 +151,5 @@ class RecentlyPlayedViewState extends State<RecentlyPlayedView>
         );
       },
     );
-  }
-}
-
-class LibraryHeader extends StatefulWidget {
-  final Future<void> Function(String? keyword) onSearch;
-  final Future<void> Function() onImportDirectory;
-  final Future<void> Function() onImportFiles;
-  final List<Song> songs;
-
-  const LibraryHeader({
-    super.key,
-    required this.onSearch,
-    required this.onImportDirectory,
-    required this.onImportFiles,
-    required this.songs,
-  });
-
-  @override
-  State<LibraryHeader> createState() => _LibraryHeaderState();
-}
-
-class _LibraryHeaderState extends State<LibraryHeader> {
-  bool _showSearch = false;
-  final TextEditingController _searchController = TextEditingController();
-
-  void _onSubmitted(String? value) {
-    widget.onSearch(value);
-    // 收起搜索框
-    setState(() {
-      // _showSearch = false;
-    });
-    // _searchController.clear();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Text(
-          '最近播放',
-          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(width: 16),
-        Text('共${widget.songs.length}首最近播放音乐'),
-        const Spacer(),
-        if (_showSearch)
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: '请输入搜索关键词',
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(
-                  vertical: 8,
-                  horizontal: 12,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16), // 圆角半径16，可调
-                ),
-              ),
-              onSubmitted: _onSubmitted,
-            ),
-          ),
-
-        IconButton(
-          icon: Icon(_showSearch ? Icons.close_rounded : Icons.search_rounded),
-          onPressed: () {
-            setState(() {
-              if (_showSearch) {
-                _searchController.clear();
-              }
-              if (_showSearch) {
-                _showSearch = !_showSearch;
-                _onSubmitted(null);
-                return;
-              }
-              _showSearch = !_showSearch;
-            });
-          },
-        ),
-      ],
-    );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 }

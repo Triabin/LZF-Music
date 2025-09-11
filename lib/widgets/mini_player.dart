@@ -148,7 +148,9 @@ class _MiniPlayerState extends State<MiniPlayer> {
                                   ],
                                 ),
                               ),
+                              SizedBox(width: 30),
                           ],
+                          
                         ),
                         if (showProgressControl) ...[
                           SizedBox(height: 8),
@@ -195,6 +197,7 @@ class _MiniPlayerState extends State<MiniPlayer> {
                                       : null,
                                 ),
                               ),
+                              SizedBox(width: 30,)
                             ],
                           ),
                           SizedBox(height: 6),
