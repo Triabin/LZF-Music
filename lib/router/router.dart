@@ -66,76 +66,69 @@ class MenuManager {
   final ValueNotifier<int> hoverIndex = ValueNotifier(-1);
 
   /// 页面实例缓存
-  late final List<Widget> pages;
+  late final List<Widget> pages = items.map((item) => item.buildPage()).toList();
 
   /// 导航器 Key（供需要嵌套导航的页面使用）
-  late final GlobalKey<NavigatorState> navigatorKey;
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   /// 所有菜单项
-  late final List<MenuItem> items;
+  late final List<MenuItem> items = [
+    MenuItem(
+      icon: Icons.library_music_rounded,
+      iconSize: 22.0,
+      label: '库',
+      key: PlayerPage.library,
+      pageKey: GlobalKey<LibraryViewState>(),
+      builder: (key) => LibraryView(key: key),
+    ),
+    MenuItem(
+      icon: Icons.favorite_rounded,
+      iconSize: 22.0,
+      label: '喜欢',
+      key: PlayerPage.favorite,
+      pageKey: GlobalKey<FavoritesViewState>(),
+      builder: (key) => FavoritesView(key: key),
+    ),
+    MenuItem(
+      icon: Icons.playlist_play_rounded,
+      iconSize: 22.0,
+      label: '播放列表',
+      key: PlayerPage.playlist,
+      pageKey: GlobalKey<PlaylistsViewState>(),
+      builder: (key) => PlaylistsView(key: key),
+    ),
+    MenuItem(
+      icon: Icons.history_rounded,
+      iconSize: 22.0,
+      label: '最近播放',
+      key: PlayerPage.recently,
+      pageKey: GlobalKey<RecentlyPlayedViewState>(),
+      builder: (key) => RecentlyPlayedView(key: key),
+    ),
+    MenuItem(
+      icon: Icons.settings_rounded,
+      iconSize: 22.0,
+      label: '系统设置',
+      key: PlayerPage.settings,
+      pageKey: GlobalKey<NestedNavigatorWrapperState>(),
+      builder: (key) => NestedNavigatorWrapper(
+        key: key,
+        navigatorKey: navigatorKey,
+        initialRoute: '/',
+        subItems: subItems, // 将二级菜单配置传递给包装器
+      ),
+    ),
+  ];
 
   /// 二级菜单项配置
-  late final List<MenuSubItem> subItems;
+  late final List<MenuSubItem> subItems = _getDefaultSubItems();
 
   /// 初始化（必须调用一次）
   Future<void> init({
     required GlobalKey<NavigatorState> navigatorKey,
     List<MenuSubItem>? subMenuItems, // 可选参数，允许从外部传入
   }) async {
-    this.navigatorKey = navigatorKey;
-
-    // 设置二级菜单项，如果没有传入则使用默认配置
-    subItems = subMenuItems ?? _getDefaultSubItems();
-
-    items = [
-      MenuItem(
-        icon: Icons.library_music_rounded,
-        iconSize: 22.0,
-        label: '库',
-        key: PlayerPage.library,
-        pageKey: GlobalKey<LibraryViewState>(),
-        builder: (key) => LibraryView(key: key),
-      ),
-      MenuItem(
-        icon: Icons.favorite_rounded,
-        iconSize: 22.0,
-        label: '喜欢',
-        key: PlayerPage.favorite,
-        pageKey: GlobalKey<FavoritesViewState>(),
-        builder: (key) => FavoritesView(key: key),
-      ),
-      MenuItem(
-        icon: Icons.playlist_play_rounded,
-        iconSize: 22.0,
-        label: '播放列表',
-        key: PlayerPage.playlist,
-        pageKey: GlobalKey<PlaylistsViewState>(),
-        builder: (key) => PlaylistsView(key: key),
-      ),
-      MenuItem(
-        icon: Icons.history_rounded,
-        iconSize: 22.0,
-        label: '最近播放',
-        key: PlayerPage.recently,
-        pageKey: GlobalKey<RecentlyPlayedViewState>(),
-        builder: (key) => RecentlyPlayedView(key: key),
-      ),
-      MenuItem(
-        icon: Icons.settings_rounded,
-        iconSize: 22.0,
-        label: '系统设置',
-        key: PlayerPage.settings,
-        pageKey: GlobalKey<NestedNavigatorWrapperState>(),
-        builder: (key) => NestedNavigatorWrapper(
-          key: key,
-          navigatorKey: navigatorKey,
-          initialRoute: '/',
-          subItems: subItems, // 将二级菜单配置传递给包装器
-        ),
-      ),
-    ];
-
-    pages = items.map((item) => item.buildPage()).toList();
+    
 
     final playerState = await PlayerStateStorage.getInstance();
     currentPage.value = playerState.currentPage;

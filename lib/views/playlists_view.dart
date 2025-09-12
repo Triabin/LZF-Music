@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lzf_music/widgets/page_header.dart';
 import 'dart:async';
 import '../database/database.dart';
 import '../services/music_import_service.dart';
@@ -95,7 +96,7 @@ class PlaylistsViewState extends State<PlaylistsView> with ShowAwarePage {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              LibraryHeader(songs: songs),
+              PageHeader(songs: songs,showImport: false,showSearch: false,),
               const SizedBox(height: 24),
               MusicListHeader(
                 songs: songs,

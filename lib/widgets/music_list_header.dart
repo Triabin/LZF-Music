@@ -39,13 +39,20 @@ class _MusicListHeaderState extends State<MusicListHeader> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final containerWidth = constraints.maxWidth;
+          final showSampleAndBitrate = containerWidth > 900;
+          final showDuration = containerWidth > 700;
+          final showAlbum = containerWidth > 500;
+          
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
           children: [
             const SizedBox(width: 60),
             Expanded(
@@ -116,21 +123,22 @@ class _MusicListHeaderState extends State<MusicListHeader> {
                     ),
                   ),
                   // 专辑列
-                  Expanded(
-                    flex: 2,
-                    child: Row(
-                      children: [
-                        Text(
-                          '专辑',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                  if (showAlbum)
+                    Expanded(
+                      flex: 2,
+                      child: Row(
+                        children: [
+                          Text(
+                            '专辑',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        if (widget.allowReorder) const SizedBox(width: 4),
-                        if (widget.allowReorder)
-                          ToggleablePopupMenu<String>(
-                            isSelected: widget.orderField == 'album',
-                            tooltip: '按照专辑排序',
+                          if (widget.allowReorder) const SizedBox(width: 4),
+                          if (widget.allowReorder)
+                            ToggleablePopupMenu<String>(
+                              isSelected: widget.orderField == 'album',
+                              tooltip: '按照专辑排序',
                             options: <MenuOption<String>>[
                               MenuOption(label: '默认', value: null),
                               MenuOption(label: '顺序', value: 'asc'),
@@ -148,28 +156,31 @@ class _MusicListHeaderState extends State<MusicListHeader> {
                     ),
                   ),
                   // 采样率列
-                  const SizedBox(
-                    width: 70,
-                    child: Text(
-                      '采样率',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                  if (showSampleAndBitrate)
+                    const SizedBox(
+                      width: 70,
+                      child: Text(
+                        '采样率',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                  ),
                   // 比特率列
-                  const SizedBox(
-                    width: 80,
-                    child: Text(
-                      '比特率',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                  if (showSampleAndBitrate)
+                    const SizedBox(
+                      width: 80,
+                      child: Text(
+                        '比特率',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                  ),
                   // 时长列
-                  SizedBox(
-                    width: 60,
-                    child: Row(
-                      children: [
-                        Text(
-                          '时长',
+                  if (showDuration)
+                    SizedBox(
+                      width: 60,
+                      child: Row(
+                        children: [
+                          Text(
+                            '时长',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
@@ -267,8 +278,10 @@ class _MusicListHeaderState extends State<MusicListHeader> {
                   }
                 },
               ),
-          ],
-        ),
+            ],
+          ),
+        );
+        },
       ),
     );
   }

@@ -420,7 +420,7 @@ class _HoverableLyricLineState extends State<HoverableLyricLine> {
               child: AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 250),
                 style: TextStyle(
-                  fontSize: 32,
+                  fontSize: 36,
                   color: widget.isCurrent ? Colors.white : Colors.white70,
                   fontWeight: FontWeight.bold,
                 ),

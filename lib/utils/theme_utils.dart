@@ -25,4 +25,24 @@ class ThemeUtils {
   static Color backgroundColor(BuildContext context) {
     return select(context, light: lightBg, dark: darkBg);
   }
+
+  /// 获取主题主色（Primary Color）
+  static Color primaryColor(BuildContext context) {
+    return Theme.of(context).colorScheme.primary;
+  }
+
+  /// 获取次要颜色（Secondary）
+  static Color secondaryColor(BuildContext context) {
+    return Theme.of(context).colorScheme.secondary;
+  }
+
+  /// 获取文本主色（根据亮/暗模式自动切换）
+  static Color textColor(BuildContext context) {
+    return Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+  }
+
+  /// 获取错误颜色
+  static Color errorColor(BuildContext context) {
+    return Theme.of(context).colorScheme.error;
+  }
 }

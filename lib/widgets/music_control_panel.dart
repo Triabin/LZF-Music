@@ -11,6 +11,7 @@ class SongInfoPanel extends StatelessWidget {
   final Function(double) onSliderChanged;
   final Function(double) onSliderChangeEnd;
   final PlayerProvider playerProvider;
+  final bool compactLayout;
 
   const SongInfoPanel({
     super.key,
@@ -21,6 +22,7 @@ class SongInfoPanel extends StatelessWidget {
     required this.onSliderChanged,
     required this.onSliderChangeEnd,
     required this.playerProvider,
+    this.compactLayout = false,
   });
 
   String formatDuration(Duration d) {
@@ -35,35 +37,29 @@ class SongInfoPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                currentSong?.title ?? "未知歌曲",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                currentSong?.artist ?? "未知歌手",
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 18,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+        if (!compactLayout) ...[
+          Text(
+            currentSong?.title ?? "未知歌曲",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-        ),
-        const SizedBox(height: 24),
+          const SizedBox(height: 4),
+          Text(
+            currentSong?.artist ?? "未知歌手",
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 18,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 24),
+        ],
         AnimatedTrackHeightSlider(
           value: tempSliderValue >= 0 ? tempSliderValue : currentPosition,
           max: totalDuration,
@@ -73,7 +69,7 @@ class SongInfoPanel extends StatelessWidget {
           onChanged: onSliderChanged,
           onChangeEnd: onSliderChangeEnd,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Row(
           children: [
             Text(
@@ -130,11 +126,13 @@ class SongInfoPanel extends StatelessWidget {
 class MusicControlButtons extends StatelessWidget {
   final PlayerProvider playerProvider;
   final bool isPlaying;
+  final bool compactLayout;
 
   const MusicControlButtons({
     super.key,
     required this.playerProvider,
     required this.isPlaying,
+    this.compactLayout = false,
   });
 
   @override
@@ -174,7 +172,7 @@ class MusicControlButtons extends StatelessWidget {
                     icon: const Icon(Icons.skip_previous_rounded),
                     onPressed: () => playerProvider.previous(),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: compactLayout ? 8 : 16),
                   IconButton(
                     iconSize: 64,
                     color: Colors.white,
@@ -185,7 +183,7 @@ class MusicControlButtons extends StatelessWidget {
                     ),
                     onPressed: () => playerProvider.togglePlay(),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: compactLayout ? 8 : 16),
                   IconButton(
                     iconSize: 48,
                     color: (playerProvider.hasNext ||
@@ -224,7 +222,11 @@ class MusicControlButtons extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        if (compactLayout) ...[
+          const SizedBox(height: 4),
+        ] else ...[
+          const SizedBox(height: 10),
+        ],
         Row(
           children: [
             IconButton(

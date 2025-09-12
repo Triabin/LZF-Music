@@ -3,7 +3,8 @@ import 'package:lzf_music/services/audio_player_service.dart';
 import 'package:provider/provider.dart';
 import 'package:media_kit/media_kit.dart';
 
-import 'views/home_page.dart';
+import 'views/home_page_mobile.dart';
+import 'views/home_page_desktop.dart';
 import 'services/player_provider.dart';
 import 'database/database.dart';
 import './services/theme_provider.dart';
@@ -87,7 +88,7 @@ class _MainAppState extends State<MainApp> with DesktopWindowMixin {
             theme: themeProvider.buildLightTheme(),
             darkTheme: themeProvider.buildDarkTheme(),
             themeMode: themeProvider.themeMode,
-            home: const HomePage(),
+            home: HomePageWrapper(),
             navigatorObservers: [routeObserver],
             builder: (context, child) {
               if (PlatformUtils.isDesktopNotMac) {
@@ -99,5 +100,23 @@ class _MainAppState extends State<MainApp> with DesktopWindowMixin {
         );
       },
     );
+  }
+
+  
+}
+class HomePageWrapper extends StatelessWidget {
+  const HomePageWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
+    if (width < 760) {
+      // 小屏幕（手机）
+      return const HomePageMobile();
+    } else {
+      // 大屏幕（平板/桌面）
+      return const HomePageDesktop();
+    }
   }
 }

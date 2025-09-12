@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:lzf_music/utils/theme_utils.dart';
 import '../widgets/mini_player.dart';
+import '../widgets/resolution_display.dart';
 import 'package:provider/provider.dart';
 import '../../services/theme_provider.dart';
 import '../contants/app_contants.dart' show PlayerPage;
 import '../router/router.dart';
 import 'dart:ui';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class HomePageDesktop extends StatefulWidget {
+  const HomePageDesktop({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePageDesktop> createState() => _HomePageDesktopState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageDesktopState extends State<HomePageDesktop> {
   final menuManager = MenuManager();
 
   @override
@@ -263,29 +264,46 @@ class _HomePageState extends State<HomePage> {
                             ),
                     ),
 
+                    // 逻辑分辨率显示
+                    // Positioned(
+                    //   top: 8,
+                    //   right: 8,
+                    //   child: ResolutionDisplay(
+                    //     isMinimized: true,
+                    //   ),
+                    // ),
+
                     // MiniPlayer
                     Positioned(
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      child: isMiniPlayerFloating
-                          ? ClipRect(
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(
-                                  sigmaX: 10,
-                                  sigmaY: 10,
-                                ),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: ThemeUtils.backgroundColor(
-                                      context,
-                                    ).withValues(alpha: 0.6),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return isMiniPlayerFloating
+                              ? ClipRect(
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(
+                                      sigmaX: 10,
+                                      sigmaY: 10,
+                                    ),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: ThemeUtils.backgroundColor(
+                                          context,
+                                        ).withValues(alpha: 0.6),
+                                      ),
+                                      child: MiniPlayer(
+                                        containerWidth: constraints.maxWidth,
+                                      ),
+                                    ),
                                   ),
-                                  child: const MiniPlayer(),
-                                ),
-                              ),
-                            )
-                          : const MiniPlayer(),
+                                )
+                              : MiniPlayer(
+                                  containerWidth: constraints.maxWidth,
+                                );
+                        },
+                      ),
                     ),
                   ],
                 ),
